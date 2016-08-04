@@ -1,6 +1,6 @@
-package org.allenai.euclid
+package org.allenai.iqclid
 
-import org.allenai.euclid.api._
+import org.allenai.iqclid.api._
 
 object RandUtil {
 
@@ -33,15 +33,7 @@ object RandUtil {
   }
 
   def randomLeaf: Leaf = {
-    pickWithProb(((0 until 5).map(Number(_)) ++ Seq(T(1), I())).map(x => (x, 1.0)))
-  }
-
-  def coinFlip(p: Double = 0.5): Boolean = {
-    if (Math.random() < p) {
-      true
-    } else {
-      false
-    }
+    pickWithProb(((0 until 5).map(Number(_)) ++ Seq(T(1), T(2), I())).map(x => (x, 1.0)))
   }
 
   def randomOp: Op = {
@@ -59,7 +51,7 @@ object RandUtil {
             // We've replaced something in the left
             (Apply(op, Seq(left._1, arg2)), None)
           } else {
-            val right = replaceRandomNodeHelper(arg1, index + left._2.get)
+            val right = replaceRandomNodeHelper(arg2, index + left._2.get)
             if (right._2.isEmpty) {
               // We've replaced something in the right
               (Apply(op, Seq(arg1, right._1)), None)

@@ -1,6 +1,6 @@
 import org.allenai.common.testkit.UnitSpec
-import org.allenai.euclid.NumberSequence
-import org.allenai.euclid.api.{BaselineFitness, I, Plus, _}
+import org.allenai.iqclid.NumberSequence
+import org.allenai.iqclid.api.{BaselineFitness, I, Plus, _}
 
 class TreeSpec extends UnitSpec{
 
