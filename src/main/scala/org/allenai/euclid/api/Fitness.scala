@@ -35,9 +35,9 @@ class AccuracyFirstFitness(alpha: Double) extends BaselineFitness(alpha) {
     val acc = accuracy(tree, target)
     val comp = complexity(tree)
     if (acc == 0) {
-      1.0 / (1.0 + Math.pow(Math.E, -comp))
+      2*(1.0 / (1.0 + Math.pow(Math.E, -comp)) - 0.5)
     } else {
-      alpha * acc + (1 - alpha) * comp
+      1 + alpha * acc + (1 - alpha) * comp
     }
   }
 

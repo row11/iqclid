@@ -33,6 +33,7 @@ abstract class BeamSearch(maxSteps: Int, bestk: Int) extends Search {
   }
 }
 
+
 class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends BeamSearch(maxSteps, bestk) {
   def proposals(trees: Seq[Tree]): Seq[Tree] = {
     val mergeTrees = if (trees.size >= 2) {
