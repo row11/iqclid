@@ -2,8 +2,6 @@ package org.allenai.euclid.api
 
 import org.allenai.euclid.NumberSequence
 
-/** Created by cristipp on 8/4/16.
-  */
 trait Fitness {
   /** Total fitness of a tree, as a function of accuracy and complexity. Lower is better. */
   def eval(tree: Tree, s: NumberSequence): Double
