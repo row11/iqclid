@@ -1,4 +1,4 @@
-package org.allenai.euclid
+package org.allenai.euclid.api
 
 object Tree {
   val listOfOps = Seq(
@@ -33,7 +33,6 @@ case class Mod() extends Op
 class BadTreeException extends RuntimeException
 
 object Evaluator {
-
   def evaluate(tree: Tree, baseCases: Seq[Int], numTerms: Int): Seq[Int] = {
     (baseCases.size until numTerms).foldLeft(baseCases) {
       case (seqSoFar, nextIndex) =>
@@ -72,8 +71,5 @@ object Evaluator {
         }
       case _ => throw new BadTreeException()
     }
-
-
   }
-
 }

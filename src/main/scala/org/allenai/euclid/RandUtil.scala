@@ -1,5 +1,7 @@
 package org.allenai.euclid
 
+import org.allenai.euclid.api._
+
 object RandUtil {
 
   def randInt(range: Int): Int = {
@@ -43,26 +45,26 @@ object RandUtil {
   //TODO finish this
   def replaceRandomNode(tree: Tree): Tree = {
     val toReplace = randInt(Tree.size(tree))
-//    def replaceRandomLeafHelper(tree: Tree, treeIndex: Int): (Tree, Option[Int]) = {
-//      if (treeIndex == -1) {
-//        (tree, None)
-//      } else {
-//        tree match {
-//          case Apply(op, args) =>
-//            if (treeIndex == toReplace) {
-//              (Apply(randomOp, args), None)
-//            } else {
-//              (op, Some(1))
-//            }
-//          case l: Leaf =>
-//            if (treeIndex == toReplace) {
-//              (randomLeaf, None)
-//            } else {
-//              (l, Some(1))
-//            }
-//        }
-//      }
-//    }
+    //    def replaceRandomLeafHelper(tree: Tree, treeIndex: Int): (Tree, Option[Int]) = {
+    //      if (treeIndex == -1) {
+    //        (tree, None)
+    //      } else {
+    //        tree match {
+    //          case Apply(op, args) =>
+    //            if (treeIndex == toReplace) {
+    //              (Apply(randomOp, args), None)
+    //            } else {
+    //              (op, Some(1))
+    //            }
+    //          case l: Leaf =>
+    //            if (treeIndex == toReplace) {
+    //              (randomLeaf, None)
+    //            } else {
+    //              (l, Some(1))
+    //            }
+    //        }
+    //      }
+    //    }
     ???
   }
 }
