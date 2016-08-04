@@ -31,7 +31,10 @@ abstract class StochasticBeamSearch(maxSteps: Int, bestk: Int) extends Search {
         val candidates = (accTrees ++ proposals(accTrees)).sortBy {
           tree => fitness(accuracy(tree, target), complexity(tree))
         }
-      candidates.take(bestk)
+//        println("CANDS: " + candidates.map(tree => fitness(accuracy(tree, target), complexity(tree))))
+//        println("BEST SO FAR: " + candidates.head)
+      val result = candidates.take(bestk)
+        result
     }
   }
 }
@@ -45,20 +48,15 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
             // Merge two trees with a random op
             if (trees.size >= 2) {
               val args = pickNRandom(trees, 2)
-              val op = pickNRandom(Tree.listOfOps, 1).head
+              val op = randomOp
               Seq(Apply(op, args))
             } else {
               Seq()
             }
           case 1 =>
-            // Choose a random number from 1 to 10
-            Seq(Number(randInt(10)))
+            Seq(replaceRandomNode(pickNRandom(trees, 1).head))
           case 2 =>
-            // Choose a random reference from the last two trees
-            Seq(T(randInt(2) + 1))
-          case 3 =>
-            // The index of this term
-            Seq(I())
+            Seq(randomLeaf)
         }
         accTrees ++ newTrees
     }
@@ -66,11 +64,7 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
 
   def accuracy(tree: Tree, target: NumberSequence): Double = {
     try {
-      val hypothesis = (target.numBaseCases until target.seq.length).map {
-        ind =>
-          Evaluator.evaluate(tree, ind, target)
-      }
-
+      val hypothesis = Evaluator.evaluate(tree, target.baseCases, target.length)
       // l1 distance
       target.withoutBaseCases.zip(hypothesis).map {
         case (a,b) => Math.abs(a - b)
@@ -83,12 +77,7 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
   }
 
   // Take the size of the tree as the complexity
-  def complexity(tree: Tree): Double = {
-    tree match {
-      case Apply(_, args) => 1 + args.map(complexity).sum
-      case l: Leaf => 1
-    }
-  }
+  def complexity(tree: Tree): Double = Tree.size(tree)
 
   def fitness(accuracy: Double, complexity: Double): Double = {
     alpha * accuracy + (1 - alpha) * complexity
