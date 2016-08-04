@@ -13,10 +13,11 @@ object RandUtil {
     val normalized = setWithWeights.map {
       case (t, w) => (t, w / sum)
     }
-    val normalizedCDF = setWithWeights.foldLeft(Seq[(T, Double)](normalized.head)) {
-      case (accVec, a) =>
+    val normalizedCDF = normalized.dropRight(1).foldRight(Seq[(T, Double)](normalized.last)) {
+      case (a, accVec) =>
         (a._1, a._2 + accVec.head._2) +: accVec
-    }
+    }.reverse
+
     normalizedCDF.find {
       case (t, p) =>
         Math.random() < p
@@ -32,7 +33,7 @@ object RandUtil {
   }
 
   def randomLeaf: Leaf = {
-    pickWithProb(((0 until 10).map(Number(_)) ++ Seq(T(1), T(2), I())).map(x => (x, 1.0)))
+    pickWithProb(((0 until 5).map(Number(_)) ++ Seq(T(1), I())).map(x => (x, 1.0)))
   }
 
   def coinFlip(p: Double = 0.5): Boolean = {
