@@ -45,7 +45,7 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
   def proposals(trees: Seq[Tree]): Seq[Tree] = {
     (0 until 100).foldLeft(Seq[Tree]()) {
       case (accTrees, _) =>
-        val newTrees = randInt(3) match {
+        val newTrees = randInt(2) match {
           case 0 =>
             // Merge two trees with a random op
             if (trees.size >= 2) {
@@ -55,9 +55,9 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
             } else {
               Seq()
             }
+//          case 1 =>
+//            Seq(replaceRandomNode(pickNRandom(trees, 1).head))
           case 1 =>
-            Seq(replaceRandomNode(pickNRandom(trees, 1).head))
-          case 2 =>
             Seq(randomLeaf)
         }
         accTrees ++ newTrees

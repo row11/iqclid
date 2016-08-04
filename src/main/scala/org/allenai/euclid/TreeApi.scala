@@ -62,7 +62,12 @@ object Evaluator {
               evaluateInternal(el1, seqSoFar, index) / evaluateInternal(el2, seqSoFar, index)
             }
           case (Mod(), Seq(el1, el2)) =>
-            evaluateInternal(el1, seqSoFar, index) % evaluateInternal(el2, seqSoFar, index)
+            val denom = evaluateInternal(el2, seqSoFar, index)
+            if (denom == 0) {
+              throw new BadTreeException()
+            } else {
+              evaluateInternal(el1, seqSoFar, index) % evaluateInternal(el2, seqSoFar, index)
+            }
           case _ => throw new BadTreeException()
         }
       case _ => throw new BadTreeException()

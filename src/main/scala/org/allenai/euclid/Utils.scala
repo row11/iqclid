@@ -1,3 +1,5 @@
+package org.allenai.euclid
+
 object Utils {
 
   def l1Dist(seq1: Seq[Int], seq2: Seq[Int]): Double = {
