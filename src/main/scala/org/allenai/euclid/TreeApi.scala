@@ -1,3 +1,5 @@
+package org.allenai.euclid
+
 object Tree {
   val listOfOps = Seq(
     Plus(), Times(), Minus(), Div(), Mod()

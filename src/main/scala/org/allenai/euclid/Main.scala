@@ -1,3 +1,5 @@
+package org.allenai.euclid
+
 object Main {
 
   def main(args: Array[String]): Unit = {
