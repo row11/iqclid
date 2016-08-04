@@ -1,7 +1,7 @@
 package org.allenai.euclid
 
 import org.allenai.euclid.RandUtil._
-import org.allenai.euclid.api.{ Apply, BadTreeException, Evaluator, Tree }
+import org.allenai.euclid.api.{I, T, _}
 
 trait Search {
   /** Evaluate how well the tree approximates the target sequence. Lower is better. */
@@ -29,11 +29,9 @@ abstract class StochasticBeamSearch(maxSteps: Int, bestk: Int) extends Search {
     (0 until maxSteps).foldLeft(Seq[Tree]()) {
       case (accTrees, step) =>
         println(s"STEP: $step")
-        val candidates = (accTrees ++ proposals(accTrees)).sortBy {
+        val candidates = (accTrees ++ proposals(accTrees)).distinct.sortBy {
           tree => fitness(accuracy(tree, target), complexity(tree))
         }
-        //        println("CANDS: " + candidates.map(tree => fitness(accuracy(tree, target), complexity(tree))))
-        //        println("BEST SO FAR: " + candidates.head)
         val result = candidates.take(bestk)
         result
     }
@@ -44,22 +42,18 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
   def proposals(trees: Seq[Tree]): Seq[Tree] = {
     (0 until 100).foldLeft(Seq[Tree]()) {
       case (accTrees, _) =>
-        val newTrees = randInt(2) match {
-          case 0 =>
-            // Merge two trees with a random op
-            if (trees.size >= 2) {
-              val args = pickNRandom(trees, 2)
-              val op = randomOp
-              Seq(Apply(op, args))
-            } else {
-              Seq()
-            }
-          //          case 1 =>
-          //            Seq(replaceRandomNode(pickNRandom(trees, 1).head))
-          case 1 =>
-            Seq(randomLeaf)
+
+        val mergeTrees = if (trees.size >= 2) {
+          val args = pickNRandom(trees, 2)
+          val op = randomOp
+          Seq(Apply(op, args))
+        } else {
+          Seq()
         }
-        accTrees ++ newTrees
+        val createLeaves = (0 until 10).map(Number(_))  ++ Seq(T(1), T(2), I())
+        val replaceSubtrees = trees.map(replaceRandomNode)
+        val mutations = mergeTrees ++ createLeaves ++ replaceSubtrees
+        accTrees :+ RandUtil.pickWithProb(mutations.map(x => (x, 1.0)))
     }
   }
 
