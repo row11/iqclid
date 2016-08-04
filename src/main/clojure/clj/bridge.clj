@@ -5,20 +5,62 @@
   (:use clojure.walk)
   (:gen-class
     :methods [#^{:static true} [greet [] void]
+              #^{:static true} [search [int int java.util.ArrayList java.util.concurrent.Callable] void]
               #^{:static true} [tutorial [int int] void]]))
 
 (defn -greet []
-  (println "Hello world from Clojure!")
-  (let [a (list 0 1 2 3 4)
-        ftext '(let [a (int-array 'aplaceholder)] (list a (fn [i] (aget a i))))
-        ftext2 (postwalk #(if (= % 'aplaceholder) a (do %)) ftext)]
-    (println ftext2)
-    (let [af (eval ftext2)
-          a (nth af 0)
-          f (nth af 1)]
-      (println (f 2))
-      (aset a 2 10)
-      (println (f 2)))))
+  (println "Hello world from Clojure!"))
+
+;;  (let [a (list 0 1 2 3 4)
+;;        ftext '(let [a (int-array 'aplaceholder)] (list a (fn [i] (aget a i))))
+;;        ftext2 (postwalk #(if (= % 'aplaceholder) a (do %)) ftext)]
+;;    (println ftext2)
+;;    (let [af (eval ftext2)
+;;          a (nth af 0)
+;;          f (nth af 1)]
+;;      (println (f 2))
+;;      (aset a 2 10)
+;;      (println (f 2)))))
+
+(defn to-java-rec [node]
+  (if (seq? node)
+    (java.util.ArrayList. (map to-java-rec node))
+    node))
+
+(defn to-java [tree]
+  (to-java-rec (nth tree 2)))
+
+(def functions '[[+ 2][- 2][* 2][fungp.util/abs 1][fungp.util/sdiv 2]])
+
+(def parameters ['i 'p1 'p2 'p3])
+
+(def numbers (range 10))
+
+(defn report
+  "Reporting function. Prints out the tree and its score"
+  [tree fitness]
+  (pprint tree)
+  (println (str "Error:\t" fitness "\n"))
+  (flush))
+
+(defn -search [n1 n2 box callable]
+  (println (str "Max generations: " (* n1 n2)))
+  (let [fitness (fn [tree]
+                   (.set box 0 (to-java tree))
+                   (.call callable))
+        options {:iterations n1 :migrations n2 :num-islands 6 :population-size 40
+                 :tournament-size 5 :mutation-probability 0.1
+                 :max-depth 10 :terminals parameters
+                 :numbers numbers :fitness fitness
+                 :functions functions :report report}
+            ;; the data returned by run-genetic-programming is as follows:
+            ;; [population [best-tree score]]
+            ;; since we don't care about keeping the whole population
+            ;; around, we can save off the tree and score like this
+        [tree score] (rest (run-genetic-programming options))]
+      (println "Done!")
+      (.set box 0 (to-java tree))
+      (.set box 1 score)))
 
 (def sample-functions
   "Here's a vector of vectors consisting of [symbol arity] pairs. The symbol must resolve
@@ -27,10 +69,12 @@
   '[[+ 2][- 2][* 2][fungp.util/abs 1]
     [fungp.util/sdiv 2][inc 1][dec 1]])
 
+;;;;;;;;;;;;
+
 (def sample-parameters
   "This defines the parameters (or, in this case, parameter) to be used to eval the
   generated functions."
-  ['i 'p1 'p2 'p3 'p4])
+  ['a])
 
 (def number-literals
   "This generates floating point numbers up to 10 as number literals to be used in the code."
