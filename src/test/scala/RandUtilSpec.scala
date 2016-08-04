@@ -19,7 +19,6 @@ class RandUtilSpec extends UnitSpec {
   "replaceRandomNode" should "work" in {
 
     val result = RandUtil.replaceRandomNode(
-//      Apply(Plus(), Seq(Number(1), Number(2)))
       Apply(Plus(), Seq(Apply(Plus(), Seq(Number(1), Number(2))), I()))
     )
     println(result)
