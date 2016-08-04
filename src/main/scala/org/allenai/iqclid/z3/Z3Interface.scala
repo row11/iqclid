@@ -1,7 +1,10 @@
 package org.allenai.iqclid.z3
 
-import org.allenai.euclid.Logging.logger
-import org.allenai.euclid.eulogy.SmtUnknown
+import com.microsoft.z3._
+import com.microsoft.z3.Symbol
+import scala.collection.mutable
+import scala.collection.mutable.ArrayBuffer
+
 import org.allenai.iqclid.z3.ThreadSafeDependencies.Z3Module
 
 /** various relevant status values after the SMT program is solved */
@@ -485,20 +488,20 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
     // solve 1,2,3,1,2,3: f(i) = (i mod 3) + 1
     def solve() = {
       solver.add(mkFormulaEq(mkFormula))
-      auxConstraints.foreach(c => solver.add(c))
-
+//      auxConstraints.foreach(c => solver.add(c))
+  
       val status = check()
       val precision = 16 // number of digits of precision for real values in the model
       status match {
         case SmtUnknown(reason) =>
           throw new Exception(s"SMT check() returned status UNKNOWN: $reason")
         case SmtUnsatisfiable =>
-          logger.debug("No satisfying assignment found")
+          println("No satisfying assignment found")
           Seq.empty
         case SmtSatisfiable =>
           val model = extractModel(precision)
           println(model)
-          logger.debug("SMT solution: " + model.mkString(", "))
+          println("SMT solution: " + model.mkString(", "))
           Seq(model)
         case _ => throw new IllegalStateException("Unrecognized SMT status")
       }
