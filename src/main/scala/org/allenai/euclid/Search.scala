@@ -41,7 +41,7 @@ abstract class StochasticBeamSearch(maxSteps: Int, bestk: Int) extends Search {
 
 class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends StochasticBeamSearch(maxSteps, bestk) {
   def proposals(trees: Seq[Tree]): Seq[Tree] = {
-    val result = (0 until 100).foldLeft(Seq[Tree]()) {
+    (0 until 100).foldLeft(Seq[Tree]()) {
       case (accTrees, _) =>
         val mergeTrees = if (trees.size >= 2) {
           val args = pickNRandom(trees, 2)
@@ -55,8 +55,6 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
         val mutations = mergeTrees ++ createLeaves ++ replaceSubtrees
         accTrees :+ RandUtil.pickWithProb(mutations.map(x => (x, 1.0)))
     }
-    println(result)
-    result
   }
 
   def accuracy(tree: Tree, target: NumberSequence): Double = {
