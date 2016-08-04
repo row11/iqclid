@@ -2,6 +2,7 @@
   (:use fungp.core) ;; include the core framework
   (:use fungp.util) ;; include utility functions
   (:use clojure.pprint)
+  (:use clojure.walk)
   (:gen-class
     :methods [#^{:static true} [greet [] void]
               #^{:static true} [tutorial [int int] void]]))
@@ -9,9 +10,10 @@
 (defn -greet []
   (println "Hello world from Clojure!")
   (let [a (list 0 1 2 3 4)
-        ftext `(let [a# (int-array '~a)] (list a# (fn [i#] (aget a# i#))))]
-    (println ftext)
-    (let [af (eval ftext)
+        ftext '(let [a (int-array a#)] (list a (fn [i] (aget a i))))
+        ftext2 (walk (fn [t] (if (t == 'a#) a t) identity ftext]
+    (println ftext2)
+    (let [af (eval ftext2)
           a (nth af 0)
           f (nth af 1)]
       (println (f 2))
