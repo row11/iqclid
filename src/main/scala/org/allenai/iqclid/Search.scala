@@ -1,7 +1,7 @@
-package org.allenai.euclid
+package org.allenai.iqclid
 
-import org.allenai.euclid.RandUtil._
-import org.allenai.euclid.api.{I, T, _}
+import org.allenai.iqclid.RandUtil._
+import org.allenai.iqclid.api.{I, T, _}
 
 trait Search {
 
@@ -43,7 +43,7 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends BeamSearc
     } else {
       Seq()
     }
-    val createLeaves = (0 until 5).map(Number(_))  ++ Seq(T(1), I())
+    val createLeaves = (0 until 5).map(Number(_))  ++ Seq(T(1), T(2), I())
     val replaceSubtrees = trees.map(replaceRandomNode)
     mergeTrees ++ createLeaves ++ replaceSubtrees
 

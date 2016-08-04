@@ -1,6 +1,6 @@
-package org.allenai.euclid.api
+package org.allenai.iqclid.api
 
-import org.allenai.euclid.NumberSequence
+import org.allenai.iqclid.NumberSequence
 
 case class Solution(tree: Tree, fitness: Double)
 

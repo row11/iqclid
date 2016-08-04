@@ -1,4 +1,4 @@
-package org.allenai.euclid
+package org.allenai.iqclid
 
 object Main {
 

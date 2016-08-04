@@ -1,6 +1,6 @@
-package org.allenai.euclid
+package org.allenai.iqclid
 
-import org.allenai.euclid.api.{ Fitness, Solution, Solver }
+import org.allenai.iqclid.api.{ Fitness, Solution, Solver }
 
 /** Created by cristipp on 8/4/16.
   */
