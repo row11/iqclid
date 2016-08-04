@@ -32,6 +32,7 @@ abstract class StochasticBeamSearch(maxSteps: Int, bestk: Int) extends Search {
         val candidates = (accTrees ++ proposals(accTrees)).distinct.sortBy {
           tree => fitness(accuracy(tree, target), complexity(tree))
         }
+        println(candidates.map(tree => fitness(accuracy(tree, target), complexity(tree))))
         val result = candidates.take(bestk)
         result
     }
@@ -40,9 +41,8 @@ abstract class StochasticBeamSearch(maxSteps: Int, bestk: Int) extends Search {
 
 class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends StochasticBeamSearch(maxSteps, bestk) {
   def proposals(trees: Seq[Tree]): Seq[Tree] = {
-    (0 until 100).foldLeft(Seq[Tree]()) {
+    val result = (0 until 100).foldLeft(Seq[Tree]()) {
       case (accTrees, _) =>
-
         val mergeTrees = if (trees.size >= 2) {
           val args = pickNRandom(trees, 2)
           val op = randomOp
@@ -55,16 +55,15 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
         val mutations = mergeTrees ++ createLeaves ++ replaceSubtrees
         accTrees :+ RandUtil.pickWithProb(mutations.map(x => (x, 1.0)))
     }
+    println(result)
+    result
   }
 
   def accuracy(tree: Tree, target: NumberSequence): Double = {
     try {
       val hypothesis = Evaluator.evaluate(tree, target.baseCases, target.length)
       // l1 distance
-      target.withoutBaseCases.zip(hypothesis).map {
-        case (a, b) => Math.abs(a - b)
-      }.sum
-
+      Utils.l2Dist(target.withoutBaseCases, hypothesis)
     } catch {
       case e: BadTreeException =>
         Double.MaxValue
