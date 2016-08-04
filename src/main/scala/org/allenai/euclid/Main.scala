@@ -4,7 +4,7 @@ object Main {
 
   def main(args: Array[String]): Unit = {
     println("Hello world from Scala!")
-    println(clj.Hello.world)
+    println(clj.Bridge.greet)
 
     val s = NumberSequence(Seq(0, 3, 6, 9, 12), 2)
     val search = new BaselineSearch(0.999, 1000, 30)
