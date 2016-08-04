@@ -30,7 +30,7 @@
 (defn to-java [tree]
   (to-java-rec (nth tree 2)))
 
-(def functions '[[+ 2][- 2][* 2][fungp.util/abs 1][fungp.util/sdiv 2]])
+(def functions '[[+ 2][- 2][* 2][/ 2][abs 1]])
 
 (def parameters ['i 'p1 'p2 'p3])
 

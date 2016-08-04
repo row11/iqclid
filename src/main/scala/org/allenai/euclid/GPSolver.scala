@@ -26,8 +26,6 @@ object GPSolver {
           e =>
             toScala(e)
         }
-      case s: String =>
-        ()
       case l: java.lang.Long =>
         ()
       case s: clojure.lang.Symbol =>
