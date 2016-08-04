@@ -1,4 +1,6 @@
-import RandUtil._
+package org.allenai.euclid
+
+import org.allenai.euclid.RandUtil._
 
 trait Search {
 
