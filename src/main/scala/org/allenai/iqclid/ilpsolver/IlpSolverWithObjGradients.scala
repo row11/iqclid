@@ -1,4 +1,4 @@
-package org.allenai.euclid.ilpsolver
+package org.allenai.iqclid.ilpsolver
 
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer

@@ -1,4 +1,4 @@
-package org.allenai.euclid.ilpsolver
+package org.allenai.iqclid.ilpsolver
 
 /** Various parameters for the SCIP ILP solver
   *

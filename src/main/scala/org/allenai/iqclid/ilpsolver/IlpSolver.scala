@@ -1,6 +1,6 @@
-package org.allenai.euclid.ilpsolver
+package org.allenai.iqclid.ilpsolver
 
-import org.allenai.common.{ Enum, EnumCompanion }
+import org.allenai.common.{Enum, EnumCompanion}
 
 /** Various relevant status values after an ILP is solved */
 sealed abstract class IlpStatus(override val id: String) extends Enum[IlpStatus]

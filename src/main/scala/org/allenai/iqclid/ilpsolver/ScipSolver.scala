@@ -1,9 +1,7 @@
-package org.allenai.euclid.ilpsolver
-
-import org.allenai.euclid.ilpsolver.IlpStatus._
-import org.allenai.common.Logging
+package org.allenai.iqclid.ilpsolver
 
 import de.zib.jscip.nativ.jni._
+import org.allenai.common.Logging
 
 /** Class to capture SCIP's implementation of variable type */
 case class ScipVar(ptr: Long) extends IlpVar

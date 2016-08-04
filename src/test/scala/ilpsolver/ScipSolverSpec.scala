@@ -1,7 +1,8 @@
 package ilpsolver
 
 import org.allenai.common.testkit.UnitSpec
-import org.allenai.euclid.ilpsolver.{ScipParams, ScipSolver, ScipVar}
+import org.allenai.euclid.ilpsolver.ScipVar
+import org.allenai.iqclid.ilpsolver.{ScipParams, ScipSolver, ScipVar}
 
 class ScipSolverSpec extends UnitSpec {
 

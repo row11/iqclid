@@ -1,4 +1,4 @@
-package org.allenai.euclid.ilpsolver
+package org.allenai.iqclid.ilpsolver
 
 sealed trait TreeElement
 case class TNode(value: ScipVar, operatorTypeSeq: Seq[ScipVar]) extends TreeElement
