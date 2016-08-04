@@ -1,4 +1,4 @@
-package org.allenai.euclid.api
+package org.allenai.iqclid.api
 
 object Tree {
   val listOfOps = Seq(
@@ -29,6 +29,7 @@ case class Times() extends Op
 case class Minus() extends Op
 case class Div() extends Op
 case class Mod() extends Op
+case class Pow() extends Op
 
 class BadTreeException extends RuntimeException
 
@@ -44,7 +45,11 @@ object Evaluator {
     tree match {
       case Number(v) => v
       case I() => index
-      case T(i) => seqSoFar(index - i)
+      case T(i) =>
+        if (index - i < 0) {
+          throw new BadTreeException()
+        }
+        seqSoFar(index - i)
       case Apply(op, args) =>
         (op, args) match {
           case (Plus(), Seq(el1, el2)) =>
@@ -67,6 +72,10 @@ object Evaluator {
             } else {
               evaluateInternal(el1, seqSoFar, index) % evaluateInternal(el2, seqSoFar, index)
             }
+          case (Pow(), Seq(el1, el2)) =>
+            Math.pow(
+              evaluateInternal(el1, seqSoFar, index), evaluateInternal(el2, seqSoFar, index)
+            ).toInt
           case _ => throw new BadTreeException()
         }
       case _ => throw new BadTreeException()
