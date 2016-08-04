@@ -19,19 +19,43 @@ object GPSolver {
   }
 
   def toScala(tree: Object): Tree = {
+    println(tree)
+    toScalaRec(tree)
+  }
+
+  def toScalaRec(tree: Object): Tree = {
     import scala.collection.JavaConverters._
     tree match {
       case list: util.ArrayList[Object] =>
-        list.asScala.foreach {
-          e =>
-            toScala(e)
+        val elems = list.asScala
+        val op = elems.head.toString match {
+          case "+" =>
+            Plus()
+          case "-" =>
+            Minus()
+          case "*" =>
+            Times()
+          case "/" =>
+            Div()
+          case "mod" =>
+            Mod()
         }
+        val args = elems.tail.map(toScalaRec)
+        Apply(op, args)
       case l: java.lang.Long =>
-        ()
+        Number(l.intValue())
       case s: clojure.lang.Symbol =>
-        ()
+        s.toString match {
+          case "i" =>
+            I()
+          case "p1" =>
+            T(1)
+          case "p2" =>
+            T(2)
+          case "p3" =>
+            T(3)
+        }
     }
-    Number(123)
   }
 }
 
