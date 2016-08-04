@@ -10,8 +10,8 @@
 (defn -greet []
   (println "Hello world from Clojure!")
   (let [a (list 0 1 2 3 4)
-        ftext '(let [a (int-array a#)] (list a (fn [i] (aget a i))))
-        ftext2 (walk (fn [t] (if (t == 'a#) a t) identity ftext]
+        ftext '(let [a (int-array 'aplaceholder)] (list a (fn [i] (aget a i))))
+        ftext2 (postwalk #(if (= % 'aplaceholder) a (do %)) ftext)]
     (println ftext2)
     (let [af (eval ftext2)
           a (nth af 0)
