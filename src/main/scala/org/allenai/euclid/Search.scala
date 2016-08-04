@@ -4,14 +4,8 @@ import org.allenai.euclid.RandUtil._
 import org.allenai.euclid.api.{I, T, _}
 
 trait Search {
-  /** Evaluate how well the tree approximates the target sequence. Lower is better. */
-  def accuracy(tree: Tree, target: NumberSequence): Double
 
-  /** Evaluate the complexity cost of a given tree. Lower is better. */
-  def complexity(tree: Tree): Double
-
-  /** Total fitness of a tree, as a function of accuracy and complexity. Lower is better. */
-  def fitness(accuracy: Double, complexity: Double): Double
+  val fitness: Fitness
 
   /** Given the current set of tree candidates, produce the next set. */
   def proposals(trees: Seq[Tree]): Seq[Tree]
@@ -20,7 +14,7 @@ trait Search {
   def search(target: NumberSequence): Seq[Tree]
 
   def best(target: NumberSequence): Tree = {
-    search(target).minBy(tree => fitness(accuracy(tree, target), complexity(tree)))
+    search(target).minBy(tree => fitness.eval(tree, target))
   }
 }
 
@@ -30,9 +24,9 @@ abstract class StochasticBeamSearch(maxSteps: Int, bestk: Int) extends Search {
       case (accTrees, step) =>
         println(s"STEP: $step")
         val candidates = (accTrees ++ proposals(accTrees)).distinct.sortBy {
-          tree => fitness(accuracy(tree, target), complexity(tree))
+          tree => fitness.eval(tree, target)
         }
-        println(candidates.map(tree => fitness(accuracy(tree, target), complexity(tree))))
+        println(candidates.map(tree => fitness.eval(tree, target)))
         val result = candidates.take(bestk)
         result
     }
@@ -50,29 +44,13 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
         } else {
           Seq()
         }
-        val createLeaves = (0 until 10).map(Number(_))  ++ Seq(T(1), T(2), I())
+        val createLeaves = (0 until 10).map(Number(_))  ++ Seq(T(1), I())
         val replaceSubtrees = trees.map(replaceRandomNode)
         val mutations = mergeTrees ++ createLeaves ++ replaceSubtrees
         accTrees :+ RandUtil.pickWithProb(mutations.map(x => (x, 1.0)))
     }
   }
 
-  def accuracy(tree: Tree, target: NumberSequence): Double = {
-    try {
-      val hypothesis = Evaluator.evaluate(tree, target.baseCases, target.length)
-      // l1 distance
-      Utils.l2Dist(target.withoutBaseCases, hypothesis)
-    } catch {
-      case e: BadTreeException =>
-        Double.MaxValue
-    }
-  }
-
-  // Take the size of the tree as the complexity
-  def complexity(tree: Tree): Double = Tree.size(tree)
-
-  def fitness(accuracy: Double, complexity: Double): Double = {
-    alpha * accuracy + (1 - alpha) * complexity
-  }
+  override val fitness = new BaselineFitness(alpha)
 }
 

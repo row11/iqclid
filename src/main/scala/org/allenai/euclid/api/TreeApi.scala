@@ -44,7 +44,8 @@ object Evaluator {
     tree match {
       case Number(v) => v
       case I() => index
-      case T(i) => seqSoFar(index - i)
+      case T(i) =>
+        seqSoFar(index - i)
       case Apply(op, args) =>
         (op, args) match {
           case (Plus(), Seq(el1, el2)) =>
