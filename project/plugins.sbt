@@ -1,3 +1,3 @@
 logLevel := Level.Warn
 
-addSbtPlugin("com.unhandledexpression" % "sbt-clojure" % "0.1")
+addSbtPlugin("com.unhandledexpression" % "sbt-clojure" % "0.2-SNAPSHOT")
