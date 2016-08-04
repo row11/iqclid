@@ -7,7 +7,16 @@
               #^{:static true} [tutorial [int int] void]]))
 
 (defn -greet []
-  (println "Hello world from Clojure!"))
+  (println "Hello world from Clojure!")
+  (let [a (list 0 1 2 3 4)
+        ftext `(let [a# (int-array '~a)] (list a# (fn [i#] (aget a# i#))))]
+    (println ftext)
+    (let [af (eval ftext)
+          a (nth af 0)
+          f (nth af 1)]
+      (println (f 2))
+      (aset a 2 10)
+      (println (f 2)))))
 
 (def sample-functions
   "Here's a vector of vectors consisting of [symbol arity] pairs. The symbol must resolve
@@ -19,7 +28,7 @@
 (def sample-parameters
   "This defines the parameters (or, in this case, parameter) to be used to eval the
   generated functions."
-  ['a])
+  ['i 'p1 'p2 'p3 'p4])
 
 (def number-literals
   "This generates floating point numbers up to 10 as number literals to be used in the code."
@@ -37,6 +46,8 @@
 (def actual-output
   "This defines the actual outputs we are trying to match."
   (map float (map match-func training-range)))
+
+;; (eval (list 'fn parameters tree))
 
 (defn sample-fitness
   "The fitness function; it takes a tree, evals it, and returns a fitness/error score."
