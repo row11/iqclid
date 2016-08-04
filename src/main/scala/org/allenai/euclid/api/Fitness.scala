@@ -27,3 +27,18 @@ class BaselineFitness(alpha: Double) extends Fitness {
   /** Evaluate the complexity cost of a given tree. Lower is better. */
   def complexity(tree: Tree): Double = Tree.size(tree)
 }
+
+
+class AccuracyFirstFitness(alpha: Double) extends BaselineFitness(alpha) {
+
+  override def eval(tree: Tree, target: NumberSequence): Double = {
+    val acc = accuracy(tree, target)
+    val comp = complexity(tree)
+    if (acc == 0) {
+      1.0 / (1.0 + Math.pow(Math.E, -comp))
+    } else {
+      alpha * acc + (1 - alpha) * comp
+    }
+  }
+
+}

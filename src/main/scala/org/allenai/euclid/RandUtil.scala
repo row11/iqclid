@@ -33,7 +33,7 @@ object RandUtil {
   }
 
   def randomLeaf: Leaf = {
-    pickWithProb(((0 until 10).map(Number(_)) ++ Seq(T(1), I())).map(x => (x, 1.0)))
+    pickWithProb(((0 until 5).map(Number(_)) ++ Seq(T(1), I())).map(x => (x, 1.0)))
   }
 
   def coinFlip(p: Double = 0.5): Boolean = {
