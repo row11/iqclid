@@ -1,9 +1,9 @@
 package org.allenai.euclid
 
 import org.allenai.euclid.RandUtil._
+import org.allenai.euclid.api.{ Apply, BadTreeException, Evaluator, Tree }
 
 trait Search {
-
   /** Evaluate how well the tree approximates the target sequence. Lower is better. */
   def accuracy(tree: Tree, target: NumberSequence): Double
 
@@ -22,7 +22,6 @@ trait Search {
   def best(target: NumberSequence): Tree = {
     search(target).minBy(tree => fitness(accuracy(tree, target), complexity(tree)))
   }
-
 }
 
 abstract class StochasticBeamSearch(maxSteps: Int, bestk: Int) extends Search {
@@ -33,9 +32,9 @@ abstract class StochasticBeamSearch(maxSteps: Int, bestk: Int) extends Search {
         val candidates = (accTrees ++ proposals(accTrees)).sortBy {
           tree => fitness(accuracy(tree, target), complexity(tree))
         }
-//        println("CANDS: " + candidates.map(tree => fitness(accuracy(tree, target), complexity(tree))))
-//        println("BEST SO FAR: " + candidates.head)
-      val result = candidates.take(bestk)
+        //        println("CANDS: " + candidates.map(tree => fitness(accuracy(tree, target), complexity(tree))))
+        //        println("BEST SO FAR: " + candidates.head)
+        val result = candidates.take(bestk)
         result
     }
   }
@@ -55,8 +54,8 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
             } else {
               Seq()
             }
-//          case 1 =>
-//            Seq(replaceRandomNode(pickNRandom(trees, 1).head))
+          //          case 1 =>
+          //            Seq(replaceRandomNode(pickNRandom(trees, 1).head))
           case 1 =>
             Seq(randomLeaf)
         }
@@ -69,7 +68,7 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends Stochasti
       val hypothesis = Evaluator.evaluate(tree, target.baseCases, target.length)
       // l1 distance
       target.withoutBaseCases.zip(hypothesis).map {
-        case (a,b) => Math.abs(a - b)
+        case (a, b) => Math.abs(a - b)
       }.sum
 
     } catch {
