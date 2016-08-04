@@ -1,3 +1,5 @@
+package org.allenai.euclid
+
 object RandUtil {
 
   def randInt(range: Int): Int = {
