@@ -10,7 +10,7 @@ object Utils {
 
   def l2Dist(seq1: Seq[Int], seq2: Seq[Int]): Double = {
     seq1.zip(seq2).map {
-      case (a,b) => (a - b)^2
+      case (a,b) => Math.pow(a - b, 2)
     }.sum
   }
 
