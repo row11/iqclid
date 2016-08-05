@@ -14,3 +14,15 @@ libraryDependencies ++= Seq(
   "org.allenai.third_party" % "z3-native-macos" % "4.4.1-0",
   "org.apache.commons" % "commons-compress" % "1.12"
 )
+
+// Make sure SCIP libraries are locatable.
+javaOptions += s"-Djava.library.path=${unmanagedBase.value.absolutePath}"
+envVars ++= Map(
+  "LD_LIBRARY_PATH" -> s"${unmanagedBase.value.absolutePath}",
+  "DYLD_LIBRARY_PATH" -> s"${unmanagedBase.value.absolutePath}"
+)
+
+includeFilter in unmanagedJars := "*.jar" || "*.so" || "*.dylib"
+
+fork := true
+
