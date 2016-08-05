@@ -25,11 +25,7 @@ class BaselineFitness(alpha: Double) extends Fitness {
 
   /** Evaluate the complexity cost of a given tree. Lower is better. */
   def complexity(tree: Tree): Double = {
-
-    
-
-
-    Tree.size(tree)
+    Tree.symbolComplexity(tree)
   }
 }
 

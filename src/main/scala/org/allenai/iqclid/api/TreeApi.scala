@@ -31,7 +31,6 @@ object Tree {
       case Number(i) => i
       case I() => 1
       case T(i) => 2*i
-
     }
   }
 }
