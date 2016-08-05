@@ -2,9 +2,10 @@ package org.allenai.iqclid.z3
 
 import com.microsoft.z3._
 import com.microsoft.z3.Symbol
+import org.allenai.iqclid.api._
+
 import scala.collection.mutable
 import scala.collection.mutable.ArrayBuffer
-
 import org.allenai.iqclid.z3.ThreadSafeDependencies.Z3Module
 
 /** various relevant status values after the SMT program is solved */
@@ -362,8 +363,8 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
 
   /** check SMT program for satisfiability */
   def check(): SmtStatus = {
-    println("checking Z3 program for satisfiability")
-    println(s"SMT program:\n${solver.toString}")
+//    println("checking Z3 program for satisfiability")
+//    println(s"SMT program:\n${solver.toString}")
     // Consider uncommenting the next line. See:
     // http://stackoverflow.com/questions/15806141/
     //   keep-getting-unknown-result-with-pattern-usage-in-smtlib-v2-input
@@ -382,7 +383,7 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
     */
   def extractModel(precision: Int): Map[String, String] = {
     val model = solver.getModel
-    println("solution extracted: " + model.toString)
+    //println("solution extracted: " + model.toString)
     // extract variable assignment in the solution found
     val solution = boolVarMap.mapValues(model.evaluate(_, false)) ++
       intVarMap.mapValues(model.evaluate(_, false)) ++
@@ -407,14 +408,19 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
     }
   }
 
-  def solveSequence(s: Seq[Int]) = {
+  def solveSequence(s: Seq[Int]): Seq[Solution] = {
     (new SequenceSolver(s)).solve()
   }
 
   class SequenceSolver(s: Seq[Int]) {
     val seqDomain = ctx.mkFiniteDomainSort("Dom", s.size)
-    val unaOpDomain = ctx.mkFiniteDomainSort("Dom", 6)
+    val unaOpDomain = ctx.mkFiniteDomainSort("Dom", 7)
     val binOpDomain = ctx.mkFiniteDomainSort("Dom", 4)
+
+    val level = 3
+    val leavesRange = (0 to (scala.math.pow(2,level).toInt-1))
+    val lvl1Range = (0 to (scala.math.pow(2,level-1).toInt-1))
+    val lvl2Range = (0 to (scala.math.pow(2,level-2).toInt-1))
 
     def mkSeqEq(fun: FuncDecl): BoolExpr = {
       val eqTerms = s.indices.map(i => ctx.mkEq(ctx.mkApp(fun, ctx.mkNumeral(i, seqDomain)).asInstanceOf[IntExpr], ctx.mkInt(s(i))))
@@ -438,56 +444,67 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
     }
 
     def UnaryOp(op: Expr, x: IntExpr): IntExpr = {
-      ctx.mkITE(ctx.mkEq(op, ctx.mkInt(0)), ctx.mkInt(0),
-        ctx.mkITE(ctx.mkEq(op, ctx.mkInt(1)), ctx.mkInt(1),
-          ctx.mkITE(ctx.mkEq(op, ctx.mkInt(2)), ctx.mkInt(2),
-            ctx.mkITE(ctx.mkEq(op, ctx.mkInt(3)), ctx.mkInt(3),
-              ctx.mkITE(ctx.mkEq(op, ctx.mkInt(4)), ctx.mkUnaryMinus(x),
-                x))))).asInstanceOf[IntExpr]
+      ctx.mkITE(ctx.mkLe(op.asInstanceOf[IntExpr], ctx.mkInt(5)), op.asInstanceOf[IntExpr],
+                x).asInstanceOf[IntExpr]
+    }
+
+    def binOpToTree(op: Int, t1: Tree, t2: Tree): Tree = {
+      op match {
+        case 0 =>
+          Apply(Plus(),Seq(t1,t2))
+        case 1 =>
+          Apply(Times(),Seq(t1,t2))
+        case 2 =>
+          Apply(Mod(),Seq(t1,t2))
+        case _ =>
+          t2
+      }
+    }
+
+    def unaOpToTree(op: Int): Tree = {
+      op match {
+        case n if n <= 5 =>
+          Number(n)
+        case _ =>
+          I()
+      }
+    }
+
+    def formulaToTree(leafOps: Seq[Int], lvl1Ops: Seq[Int], lvl2Ops: Seq[Int], lvl3Op: Int): Tree = {
+      val leafs = leavesRange.map(i => unaOpToTree(leafOps(i)))
+      val lvl1Nodes = lvl1Range.map(i => binOpToTree(lvl1Ops(i),leafs(2*i),leafs(2*i+1)))
+      val lvl2Nodes = lvl2Range.map(i => binOpToTree(lvl2Ops(i),lvl1Nodes(2*i),lvl1Nodes(2*i+1)))
+      val lvl3Node = binOpToTree(lvl3Op, lvl2Nodes(0),lvl2Nodes(1))
+      lvl3Node
     }
 
     def mkFormula(x: IntExpr): IntExpr = {
-      val unaop1 = mkIntVar("unaop1", 0, unaOpDomain.getSize.toInt - 1)
-      val unaop2 = mkIntVar("unaop2", 0, unaOpDomain.getSize.toInt - 1)
-      val unaop3 = mkIntVar("unaop3", 0, unaOpDomain.getSize.toInt - 1)
-      val unaop4 = mkIntVar("unaop4", 0, unaOpDomain.getSize.toInt - 1)
-      val unaop5 = mkIntVar("unaop5", 0, unaOpDomain.getSize.toInt - 1)
-      val unaop6 = mkIntVar("unaop6", 0, unaOpDomain.getSize.toInt - 1)
-      val unaop7 = mkIntVar("unaop7", 0, unaOpDomain.getSize.toInt - 1)
-      val binop1 = mkIntVar("binop1", 0, binOpDomain.getSize.toInt - 1)
-      val binop2 = mkIntVar("binop2", 0, binOpDomain.getSize.toInt - 1)
-      val binop3 = mkIntVar("binop3", 0, binOpDomain.getSize.toInt - 1)
+      val leafOps = leavesRange.map(i => mkIntVar(s"leafsOp${i}", 0, unaOpDomain.getSize.toInt - 1))
+      val lvl1Ops = lvl1Range.map(i => mkIntVar(s"lvl1Op${i}", 0, binOpDomain.getSize.toInt - 1))
+      val lvl2Ops = lvl2Range.map(i => mkIntVar(s"lvl2Op${i}", 0, binOpDomain.getSize.toInt - 1))
+      val lvl3Op = mkIntVar(s"lvl3Op0", 0, binOpDomain.getSize.toInt - 1)
 
-      UnaryOp(
-        unaop1,
-        BinaryOp(
-          binop1,
-          UnaryOp(
-            unaop2,
-            BinaryOp(
-              binop2,
-              UnaryOp(unaop4, x),
-              UnaryOp(unaop5, x)
-            )
-          ),
-          UnaryOp(
-            unaop3,
-            BinaryOp(
-              binop3,
-              UnaryOp(unaop6, x),
-              UnaryOp(unaop7, x)
-            )
-          )
-        )
-      )
+      val leaves = leavesRange.map(i => UnaryOp(leafOps(i), x))
+      val lvl1Nodes = lvl1Range.map(i => BinaryOp(lvl1Ops(i),leaves(2*i),leaves(2*i+1)))
+      val lvl2Nodes = lvl2Range.map(i => BinaryOp(lvl2Ops(i),lvl1Nodes(2*i),lvl1Nodes(2*i+1)))
+      val lvl3Node = BinaryOp(lvl3Op,lvl2Nodes(0),lvl2Nodes(1))
+
+      lvl3Node
     }
 
     // solve 1,2,3,4,5: f(i) = i
     // solve 1,4,9,16,25: f(i) = i^2
     // solve 2,4,6,8,10: f(i) = 2*i
     // solve 1,2,3,1,2,3: f(i) = (i mod 3) + 1
-    def solve() = {
+    def solve(): Seq[Solution] = {
       solver.add(mkFormulaEq(mkFormula))
+      solver.add(ctx.mkEq(mkIntVar("leafsOp0"),ctx.mkInt(0)))
+      solver.add(ctx.mkEq(mkIntVar("leafsOp2"),ctx.mkInt(0)))
+      solver.add(ctx.mkEq(mkIntVar("leafsOp4"),ctx.mkInt(0)))
+      solver.add(ctx.mkEq(mkIntVar("lvl1Op0"),ctx.mkInt(3)))
+      solver.add(ctx.mkEq(mkIntVar("lvl1Op1"),ctx.mkInt(3)))
+      solver.add(ctx.mkEq(mkIntVar("lvl1Op2"),ctx.mkInt(3)))
+
       val status = check()
       val precision = 16 // number of digits of precision for real values in the model
       status match {
@@ -498,9 +515,13 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
           Seq.empty
         case SmtSatisfiable =>
           val model = extractModel(precision)
-          println(model)
-          println("SMT solution: " + model.mkString(", "))
-          Seq(model)
+          val leafOps = leavesRange.map(i => model(s"leafsOp${i}").toInt)
+          val lvl1Ops = lvl1Range.map(i => model(s"lvl1Op${i}").toInt)
+          val lvl2Ops = lvl2Range.map(i => model(s"lvl2Op${i}").toInt)
+          val lvl3Op = model(s"lvl3Op0").toInt
+
+          val tree = formulaToTree(leafOps, lvl1Ops, lvl2Ops, lvl3Op)
+          Seq(Solution(tree,1))
         case _ => throw new IllegalStateException("Unrecognized SMT status")
       }
     }
