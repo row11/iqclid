@@ -7,16 +7,13 @@ import org.allenai.iqclid.z3._
 class Z3Solver extends Solver {
 
   def getFunctionTree(depth: Int, nSeq: NumberSequence, numBaseCases: Int): Seq[Tree] = {
-    var upper = 0
+    var upper = 100
     var lower = 0
 
     var result: Seq[Tree] = Seq()
     var counter = 0
 
     do {
-      println("UPPER: " + upper)
-      println("LOWER: " + lower)
-      println("RESULT " + result)
       val newBound = (upper + lower) / 2
       counter += 1
       try {

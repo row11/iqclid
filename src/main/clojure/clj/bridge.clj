@@ -44,7 +44,7 @@
 )
 
 (defn -search [n1 n2 box callable]
-  (println (str "Max generations: " (* n1 n2)))
+;;  (println (str "Max generations: " (* n1 n2)))
   (let [fitness (fn [tree]
                    (.set box 0 (to-java tree))
                    (.call callable))

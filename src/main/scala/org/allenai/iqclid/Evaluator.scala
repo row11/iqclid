@@ -1,6 +1,6 @@
 package org.allenai.iqclid
 
-import org.allenai.iqclid.api.{ Evaluator, Solver, Tree }
+import org.allenai.iqclid.api.{Evaluator, I, Solver, Tree}
 
 case class Info(
     baseCases: Seq[Int],
@@ -44,21 +44,41 @@ class Evaluator {
     seqs.toStream.map {
       seq =>
         val results = solver.solve(seq.numberSequence)
-        val tree = results.head.tree
-        val actual = Info(seq.numberSequence.baseCases(tree), tree, results.head.fitness, seq.numberSequence.length, 1)
-        val answer = seq.answer
-        val expected = Info(seq.numberSequence.baseCases(answer), answer, 0, seq.numberSequence.length, 1)
-        Evaluation(actual, expected)
+        results match {
+          case Seq() =>
+            val actual = Info(seq.numberSequence.baseCases(I()), I(), Double.MaxValue, seq
+                .numberSequence.length, 1)
+            val answer = seq.answer
+            val expected = Info(seq.numberSequence.baseCases(answer), answer, 0, seq.numberSequence.length, 1)
+            Evaluation(actual, expected)
+          case _ =>
+            val tree =  results.head.tree
+            val actual = Info(seq.numberSequence.baseCases(tree), tree, results.head.fitness, seq.numberSequence.length, 1)
+            val answer = seq.answer
+            val expected = Info(seq.numberSequence.baseCases(answer), answer, 0, seq.numberSequence.length, 1)
+            Evaluation(actual, expected)
+        }
+
+
     }
   }
 
-  def report(evals: Stream[Evaluation]) = {
+  def report(evals: Stream[Evaluation], datasetName: String, solver: String) = {
     evals.foreach {
       eval =>
-        println(eval)
-        println
+//        println(eval)
+//        println
     }
-    val score = evals.count(_.isCorrect).toDouble / evals.size * 100
-    println(f"Score: $score%1.2f %%")
+    val correct = evals.count(_.isCorrect)
+    val total = evals.size
+    val incorrect = total - correct
+    val score = correct.toDouble / total * 100
+    println(
+      f"SOLVER: $solver\n" +
+      f"DATASET: $datasetName\n" +
+        f"CORRECT: $correct\n" +
+        f"INCORRECT: $incorrect\n" +
+        f"TOTAL: $total\n" +
+        f"SCORE: $score%1.2f %%\n\n")
   }
 }
