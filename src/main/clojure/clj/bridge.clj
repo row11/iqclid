@@ -30,10 +30,10 @@
 (defn to-java [tree]
   (to-java-rec (nth tree 2)))
 
-;; (def functions '[[+ 2][- 2][* 2][/ 2][mod 1][pow 2]])
-(def functions '[[+ 2][- 2][* 2][/ 2][mod 1]])
+;; (def functions '[[+ 2][- 2][* 2][/ 2][mod 2][pow 2]])
+(def functions '[[+ 2][- 2][* 2][/ 2][mod 2]])
 
-(def parameters ['i 't1 't2 't3])
+(def parameters ['i 't1 't2])
 
 (def numbers (range 10))
 

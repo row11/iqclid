@@ -56,23 +56,25 @@ case class Div() extends Op
 case class Mod() extends Op
 case class Pow() extends Op
 
-class BadTreeException extends RuntimeException
+class BadTreeException(msg: String) extends RuntimeException(msg)
 
 object Evaluator {
   def evaluate(tree: Tree, baseCases: Seq[Int], numTerms: Int): Seq[Int] = {
-    (baseCases.size until numTerms).foldLeft(baseCases) {
-      case (seqSoFar, nextIndex) =>
-        seqSoFar :+ evaluateInternal(tree, seqSoFar, nextIndex)
+    var results = baseCases.map(_.toDouble).toIndexedSeq
+    (results.size until numTerms).foreach {
+      i =>
+        results = results :+ evaluateInternal(tree, results, i)
     }
+    results.map(_.toInt)
   }
 
-  private def evaluateInternal(tree: Tree, seqSoFar: Seq[Int], index: Int): Int = {
+  private def evaluateInternal(tree: Tree, seqSoFar: IndexedSeq[Double], index: Int): Double = {
     tree match {
       case Number(v) => v
       case I() => index
       case T(i) =>
         if (index - i < 0) {
-          throw new BadTreeException()
+          throw new BadTreeException(s"Bad inded $tree")
         }
         seqSoFar(index - i)
       case Apply(op, args) =>
@@ -86,14 +88,14 @@ object Evaluator {
           case (Div(), Seq(el1, el2)) =>
             val denom = evaluateInternal(el2, seqSoFar, index)
             if (denom == 0) {
-              throw new BadTreeException()
+              throw new BadTreeException(s"Bad denom $tree")
             } else {
               evaluateInternal(el1, seqSoFar, index) / evaluateInternal(el2, seqSoFar, index)
             }
           case (Mod(), Seq(el1, el2)) =>
             val denom = evaluateInternal(el2, seqSoFar, index)
             if (denom == 0) {
-              throw new BadTreeException()
+              throw new BadTreeException(s"Bad denom $tree")
             } else {
               evaluateInternal(el1, seqSoFar, index) % evaluateInternal(el2, seqSoFar, index)
             }
@@ -101,9 +103,11 @@ object Evaluator {
             Math.pow(
               evaluateInternal(el1, seqSoFar, index), evaluateInternal(el2, seqSoFar, index)
             ).toInt
-          case _ => throw new BadTreeException()
+          case _ =>
+            throw new BadTreeException(s"Bad apply $tree")
         }
-      case _ => throw new BadTreeException()
+      case _ =>
+        throw new BadTreeException(s"Bad tree $tree")
     }
   }
 }

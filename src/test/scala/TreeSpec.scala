@@ -29,14 +29,14 @@ class TreeSpec extends UnitSpec {
     assert(
       fitness.accuracy(
         Apply(Plus(), Seq(Number(4), I())),
-        NumberSequence(Seq(4, 5, 6, 7, 8), 0)
+        NumberSequence(Seq(4, 5, 6, 7, 8))
       )
         == 0
     )
     assert(
       fitness.accuracy(
         Apply(Plus(), Seq(Number(5), I())),
-        NumberSequence(Seq(4, 5, 6, 7, 8), 0)
+        NumberSequence(Seq(4, 5, 6, 7, 8))
       )
         == 5
     )

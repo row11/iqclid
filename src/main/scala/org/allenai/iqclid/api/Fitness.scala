@@ -15,9 +15,8 @@ class BaselineFitness(alpha: Double) extends Fitness {
   /** Evaluate how well the tree approximates the target sequence. Lower is better. */
   def accuracy(tree: Tree, target: NumberSequence): Double = {
     try {
-      val hypothesis = Evaluator.evaluate(tree, target.baseCases, target.length)
-      // l1 distance
-      Utils.l1Dist(target.seq, hypothesis)
+      val hypothesis = Evaluator.evaluate(tree, target.baseCases(tree), target.length)
+      Utils.l2Dist(target.seq.map(_.toDouble), hypothesis.map(_.toDouble))
     } catch {
       case e: BadTreeException =>
         Double.MaxValue
@@ -42,11 +41,15 @@ class AccuracyFirstFitness(alpha: Double) extends BaselineFitness(alpha) {
 
 }
 
-class SmallFirstFitness extends BaselineFitness(0.0) {
+class SmallFirstFitness(alpha: Double) extends BaselineFitness(alpha) {
   override def eval(tree: Tree, target: NumberSequence): Double = {
     val acc = accuracy(tree, target)
     val comp = complexity(tree)
-    (1 / comp) * acc / (acc + 10)
+    if (Tree.size(tree) > 20) {
+      Double.MaxValue
+    } else {
+      1 + alpha * acc + (1 - alpha) * comp
+    }
   }
 
 }

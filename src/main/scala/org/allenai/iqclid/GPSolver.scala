@@ -13,14 +13,18 @@ object GPSolver {
       println(clj.Bridge.greet)
       //    clj.Bridge.tutorial(15, 15)
       val fitness = new AccuracyFirstFitness(0.5)
-      //      val fitness = new SmallFirstFitness
+      //      val fitness = new SmallFirstFitness(0.1)
       val solver = new GPSolver(fitness)
       //    val sequence = NumberSequence(Seq(1, 2, 3, 4, 5), 1)
       IqTest.easy.foreach {
         sequence =>
           val results = solver.solve(sequence.numberSequence)
+          val tree = results.head.tree
+          val actualSequence = Evaluator.evaluate(
+            tree, sequence.numberSequence.baseCases(tree), sequence.numberSequence.length
+          )
           println(
-            s"""actual: ${Evaluator.evaluate(results(0).tree, sequence.numberSequence.baseCases, sequence.numberSequence.length)}
+            s"""actual: ${actualSequence}
                |actual: ${results.head}
                |expected: ${sequence.numberSequence.seq}
                |expected: ${sequence.answer}
