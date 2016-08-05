@@ -47,6 +47,7 @@ object Evaluator {
       case I() => index
       case T(i) =>
         if (index - i < 0) {
+          println("Wrong index of T(i): " + (index-i))
           throw new BadTreeException()
         }
         seqSoFar(index - i)
@@ -61,6 +62,7 @@ object Evaluator {
           case (Div(), Seq(el1, el2)) =>
             val denom = evaluateInternal(el2, seqSoFar, index)
             if (denom == 0) {
+              println("Unknown operation: " + Apply(op, args))
               throw new BadTreeException()
             } else {
               evaluateInternal(el1, seqSoFar, index) / evaluateInternal(el2, seqSoFar, index)
@@ -68,6 +70,7 @@ object Evaluator {
           case (Mod(), Seq(el1, el2)) =>
             val denom = evaluateInternal(el2, seqSoFar, index)
             if (denom == 0) {
+              println("Unknown operation: " + Apply(op, args))
               throw new BadTreeException()
             } else {
               evaluateInternal(el1, seqSoFar, index) % evaluateInternal(el2, seqSoFar, index)
@@ -75,9 +78,14 @@ object Evaluator {
           case (Pow(), Seq(el1, el2)) =>
             Math.pow(
               evaluateInternal(el1, seqSoFar, index), evaluateInternal(el2, seqSoFar, index)).toInt
-          case _ => throw new BadTreeException()
+          case _ => {
+            println("Unknown operation: " + Apply(op, args))
+            throw new BadTreeException()
+          }
         }
-      case _ => throw new BadTreeException()
+      case _ =>
+        println("Unknown tree: " + tree)
+        throw new BadTreeException()
     }
   }
 }

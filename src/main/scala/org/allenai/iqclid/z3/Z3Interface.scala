@@ -408,8 +408,17 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
     }
   }
 
-  def solveSequence(s: Seq[Int]): Seq[Solution] = {
-    (new SequenceSolver(s)).solve()
+  def solveSequence(s: Seq[Int], strategy: Int): Seq[Solution] = {
+    strategy match {
+      case 1 =>
+        (new SequenceSolver(s)).solve()
+      case 2 =>
+        (new RecSequenceSolverOrder1(s)).solve()
+      case 3 =>
+        (new RecSequenceSolverOrder2(s)).solve()
+      case _ =>
+        (new SequenceSolver(s)).solve()
+    }
   }
 
   class SequenceSolver(s: Seq[Int]) {
@@ -445,7 +454,7 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
 
     def UnaryOp(op: Expr, x: IntExpr): IntExpr = {
       ctx.mkITE(ctx.mkLe(op.asInstanceOf[IntExpr], ctx.mkInt(5)), op.asInstanceOf[IntExpr],
-                x).asInstanceOf[IntExpr]
+        x).asInstanceOf[IntExpr]
     }
 
     def binOpToTree(op: Int, t1: Tree, t2: Tree): Tree = {
@@ -509,7 +518,8 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
       val precision = 16 // number of digits of precision for real values in the model
       status match {
         case SmtUnknown(reason) =>
-          throw new Exception(s"SMT check() returned status UNKNOWN: $reason")
+          println("Status unknown")
+          Seq.empty
         case SmtUnsatisfiable =>
           println("No satisfying assignment found")
           Seq.empty
@@ -522,6 +532,475 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
 
           val tree = formulaToTree(leafOps, lvl1Ops, lvl2Ops, lvl3Op)
           Seq(Solution(tree,1))
+        case _ => throw new IllegalStateException("Unrecognized SMT status")
+      }
+    }
+  }
+
+  class RecSequenceSolver(s: Seq[Int], order: Int) {
+    val seqDomain = ctx.mkFiniteDomainSort("Dom", s.size)
+    val unaOpDomain = ctx.mkFiniteDomainSort("Dom", 4)
+    val binOpDomain = ctx.mkFiniteDomainSort("Dom", 5)
+
+    val level = 3
+    val leavesRange = (0 to (scala.math.pow(2,level).toInt-1))
+    val lvl1Range = (0 to (scala.math.pow(2,level-1).toInt-1))
+    val lvl2Range = (0 to (scala.math.pow(2,level-2).toInt-1))
+
+    var id = 0
+    def getNext(): String = {
+      id += 1
+      s"x${id}"
+    }
+
+    def mkSeqEq(fun: FuncDecl): BoolExpr = {
+      val eqTerms = s.indices.map(i => ctx.mkEq(ctx.mkApp(fun, ctx.mkNumeral(i, seqDomain)).asInstanceOf[IntExpr], ctx.mkInt(s(i))))
+      mkAnd(eqTerms)
+    }
+
+    def mkFormulaEq(formula: IntExpr => IntExpr): BoolExpr = {
+      val eqTerms = s.indices.filter(_>=order).map(i => {
+        val fi = mkIntVar(s"f_$i")
+        solver.add(ctx.mkEq(fi, formula(ctx.mkInt(i))))
+        ctx.mkEq(fi, ctx.mkInt(s(i)))
+      })
+      mkAnd(eqTerms)
+    }
+
+    def PrevOp(x: IntExpr): IntExpr = {
+      val key = s"s_minus_1_${x}"
+      if( !intVarMap.contains(key) ) {
+        val Sminus1 = mkIntVar(s"s_minus_1_${x}")
+        intVarMap.put(key,Sminus1)
+        val zeroterms = s.indices.map(i => ctx.mkImplies(mkLe(Seq(x, ctx.mkInt(0))), ctx.mkEq(Sminus1, ctx.mkInt(0))))
+        solver.add(zeroterms: _*)
+        val minus1terms = s.indices.filter(_>0).map(i => ctx.mkImplies(mkEq(Seq(x, ctx.mkInt(i))), ctx.mkEq(Sminus1, ctx.mkInt(s(i - 1)))))
+        solver.add(minus1terms: _*)
+      }
+      intVarMap(key)
+    }
+
+    def SecondPrevOp(x: IntExpr): IntExpr = {
+      val key = s"s_minus_2_${x}"
+      if( !intVarMap.contains(key) ) {
+        val Sminus2 = mkIntVar(s"s_minus_2_${x}")
+        intVarMap.put(key,Sminus2)
+        val zeroterms = s.indices.map(i => ctx.mkImplies(mkLe(Seq(x, ctx.mkInt(1))), ctx.mkEq(Sminus2, zeroConst)))
+        solver.add(zeroterms: _*)
+        val minus2terms = s.indices.filter(_>1).map(i => ctx.mkImplies(mkEq(Seq(x, ctx.mkInt(i))), ctx.mkEq(Sminus2, ctx.mkInt(s(i - 2)))))
+        solver.add(minus2terms: _*)
+      }
+      intVarMap(key)
+    }
+
+    def BinaryOp(op: Expr, x: IntExpr, y: IntExpr): IntExpr = {
+      ctx.mkITE(ctx.mkEq(op, ctx.mkInt(0)), ctx.mkAdd(x, y),
+        ctx.mkITE(ctx.mkEq(op, ctx.mkInt(1)), ctx.mkSub(x, y),
+          ctx.mkITE(ctx.mkEq(op, ctx.mkInt(2)), ctx.mkMul(x, y),
+            ctx.mkITE(ctx.mkEq(op, ctx.mkInt(3)), ctx.mkITE(ctx.mkLe(y, ctx.mkInt(0)), y, ctx.mkMod(x, y)),
+              y)))).asInstanceOf[IntExpr]
+    }
+
+    def UnaryOp(opvar: String, op: Expr, x: IntExpr): IntExpr = {
+      var opvarval = ctx.mkIntConst(opvar)
+      solver.add(ctx.mkLe(opvarval,ctx.mkInt(9)))
+      solver.add(ctx.mkGe(opvarval,ctx.mkInt(-1)))
+      ctx.mkITE(ctx.mkEq(op.asInstanceOf[IntExpr], ctx.mkInt(0)), ctx.mkInt(0),
+        ctx.mkITE(ctx.mkEq(op.asInstanceOf[IntExpr], ctx.mkInt(1)), opvarval,
+          ctx.mkITE(ctx.mkEq(op.asInstanceOf[IntExpr], ctx.mkInt(2)), x,
+            PrevOp(x)))).asInstanceOf[IntExpr]
+    }
+
+    def binOpToTree(op: Int, t1: Tree, t2: Tree): Tree = {
+      op match {
+        case 0 =>
+          Apply(Plus(),Seq(t1,t2))
+        case 1 =>
+          Apply(Minus(),Seq(t1,t2))
+        case 2 =>
+          Apply(Times(),Seq(t1,t2))
+        case 3 =>
+          Apply(Mod(),Seq(t1,t2))
+        case _ =>
+          t2
+      }
+    }
+
+    def unaOpToTree(op: Int, opvarval: Int): Tree = {
+      op match {
+        case 0 =>
+          Number(0)
+        case 1 =>
+          Number(opvarval)
+        case 2 =>
+          I()
+        case _ =>
+          T(1)
+      }
+    }
+
+    def formulaToTree(leafOps: Seq[Int],leafOpsVarVal: Seq[Int], lvl1Ops: Seq[Int], lvl2Ops: Seq[Int], lvl3Op: Int): Tree = {
+      val leafs = leavesRange.map(i => unaOpToTree(leafOps(i),leafOpsVarVal(i)))
+      val lvl1Nodes = lvl1Range.map(i => binOpToTree(lvl1Ops(i),leafs(2*i),leafs(2*i+1)))
+      val lvl2Nodes = lvl2Range.map(i => binOpToTree(lvl2Ops(i),lvl1Nodes(2*i),lvl1Nodes(2*i+1)))
+      val lvl3Node = binOpToTree(lvl3Op, lvl2Nodes(0),lvl2Nodes(1))
+      lvl3Node
+    }
+
+    def mkFormula(x: IntExpr): IntExpr = {
+      val leafOps = leavesRange.map(i => mkIntVar(s"leafsOp${i}", 0, unaOpDomain.getSize.toInt - 1))
+      val lvl1Ops = lvl1Range.map(i => mkIntVar(s"lvl1Op${i}", 0, binOpDomain.getSize.toInt - 1))
+      val lvl2Ops = lvl2Range.map(i => mkIntVar(s"lvl2Op${i}", 0, binOpDomain.getSize.toInt - 1))
+      val lvl3Op = mkIntVar(s"lvl3Op0", 0, binOpDomain.getSize.toInt - 1)
+
+      val leaves = leavesRange.map(i => UnaryOp(s"leafopvar${i}", leafOps(i), x))
+      val lvl1Nodes = lvl1Range.map(i => BinaryOp(lvl1Ops(i),leaves(2*i),leaves(2*i+1)))
+      val lvl2Nodes = lvl2Range.map(i => BinaryOp(lvl2Ops(i),lvl1Nodes(2*i),lvl1Nodes(2*i+1)))
+      val lvl3Node = BinaryOp(lvl3Op,lvl2Nodes(0),lvl2Nodes(1))
+
+      lvl3Node
+    }
+
+    // solve 1,2,3,4,5: f(i) = i
+    // solve 1,4,9,16,25: f(i) = i^2
+    // solve 2,4,6,8,10: f(i) = 2*i
+    // solve 1,2,3,1,2,3: f(i) = (i mod 3) + 1
+    def solve(): Seq[Solution] = {
+      leavesRange.foreach(i => solver.add(ctx.mkGe(mkIntVar(s"leafopvar${i}"),ctx.mkInt(-5))))
+      solver.add(mkFormulaEq(mkFormula))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp0"),ctx.mkInt(1)))
+      solver.add(ctx.mkEq(mkIntVar("leafsOp1"),ctx.mkInt(3)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp2"),ctx.mkInt(1)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp3"),ctx.mkInt(1)))
+      solver.add(ctx.mkEq(mkIntVar("leafsOp4"),ctx.mkInt(2)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp5"),ctx.mkInt(1)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp6"),ctx.mkInt(1)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp7"),ctx.mkInt(1)))
+      //(4 to 7).foreach(i => solver.add(ctx.mkLe(mkIntVar(s"leafsOp${i}"),ctx.mkInt(2))))
+      //solver.add(ctx.mkEq(mkIntVar("lvl1Op0"),ctx.mkInt(4)))
+      //solver.add(ctx.mkEq(mkIntVar("lvl1Op1"),ctx.mkInt(3)))
+      //solver.add(ctx.mkEq(mkIntVar("lvl1Op2"),ctx.mkInt(3)))
+
+      val status = check()
+      val precision = 16 // number of digits of precision for real values in the model
+      status match {
+        case SmtUnknown(reason) =>
+          println("Status unknown")
+          Seq.empty
+        case SmtUnsatisfiable =>
+          println("No satisfying assignment found")
+          Seq.empty
+        case SmtSatisfiable =>
+          val model = extractModel(precision)
+          println(model)
+          val leafOps = leavesRange.map(i => model(s"leafsOp${i}").toInt)
+          val leafOpsVarVal = leavesRange.map(i => model(s"leafopvar${i}").toInt)
+          val lvl1Ops = lvl1Range.map(i => model(s"lvl1Op${i}").toInt)
+          val lvl2Ops = lvl2Range.map(i => model(s"lvl2Op${i}").toInt)
+          val lvl3Op = model(s"lvl3Op0").toInt
+
+          val tree = formulaToTree(leafOps, leafOpsVarVal, lvl1Ops, lvl2Ops, lvl3Op)
+          Seq(Solution(tree,1))
+        case _ => throw new IllegalStateException("Unrecognized SMT status")
+      }
+    }
+  }
+
+  class RecSequenceSolverOrder1(s: Seq[Int]) {
+    val a = mkIntVar("a",1,3)
+    val b = mkIntVar("b",-3,3)
+    solver.add(mkIsNonZero(b))
+
+    val seqDomain = ctx.mkFiniteDomainSort("Dom", s.size)
+    val unaOpDomain = ctx.mkFiniteDomainSort("Dom", 3)
+    val binOpDomain = ctx.mkFiniteDomainSort("Dom", 5)
+
+    val level = 3
+    val leavesRange = (0 to (scala.math.pow(2,level).toInt-1))
+    val lvl1Range = (0 to (scala.math.pow(2,level-1).toInt-1))
+    val lvl2Range = (0 to (scala.math.pow(2,level-2).toInt-1))
+
+    var id = 0
+    def getNext(): String = {
+      id += 1
+      s"x${id}"
+    }
+
+    def mkSeqEq(fun: FuncDecl): BoolExpr = {
+      val eqTerms = s.indices.map(i => ctx.mkEq(ctx.mkApp(fun, ctx.mkNumeral(i, seqDomain)).asInstanceOf[IntExpr], ctx.mkInt(s(i))))
+      mkAnd(eqTerms)
+    }
+
+    def mkFormulaEq(formula: IntExpr => IntExpr): BoolExpr = {
+      val eqTerms = s.indices.filter(_>=1).map(i => {
+        val fi = mkIntVar(s"f_$i")
+        solver.add(ctx.mkEq(fi, formula(ctx.mkInt(i))))
+        ctx.mkEq(fi, ctx.mkAdd(ctx.mkMul(a,ctx.mkInt(s(i))),ctx.mkMul(b,ctx.mkInt(s(i-1)))))
+      })
+      mkAnd(eqTerms)
+    }
+
+    def BinaryOp(op: Expr, x: IntExpr, y: IntExpr): IntExpr = {
+      ctx.mkITE(ctx.mkEq(op, ctx.mkInt(0)), ctx.mkAdd(x, y),
+        ctx.mkITE(ctx.mkEq(op, ctx.mkInt(1)), ctx.mkSub(x, y),
+          ctx.mkITE(ctx.mkEq(op, ctx.mkInt(2)), ctx.mkMul(x, y),
+            ctx.mkITE(ctx.mkEq(op, ctx.mkInt(3)), ctx.mkITE(ctx.mkLe(y, ctx.mkInt(0)), y, ctx.mkMod(x, y)),
+              y)))).asInstanceOf[IntExpr]
+    }
+
+    def UnaryOp(opvar: String, op: Expr, x: IntExpr): IntExpr = {
+      var opvarval = ctx.mkIntConst(opvar)
+      solver.add(ctx.mkLe(opvarval,ctx.mkInt(9)))
+      solver.add(ctx.mkGe(opvarval,ctx.mkInt(-1)))
+      ctx.mkITE(ctx.mkEq(op.asInstanceOf[IntExpr], ctx.mkInt(0)), ctx.mkInt(0),
+        ctx.mkITE(ctx.mkEq(op.asInstanceOf[IntExpr], ctx.mkInt(1)), opvarval,
+          x)).asInstanceOf[IntExpr]
+    }
+
+    def binOpToTree(op: Int, t1: Tree, t2: Tree): Tree = {
+      op match {
+        case 0 =>
+          Apply(Plus(),Seq(t1,t2))
+        case 1 =>
+          Apply(Minus(),Seq(t1,t2))
+        case 2 =>
+          Apply(Times(),Seq(t1,t2))
+        case 3 =>
+          Apply(Mod(),Seq(t1,t2))
+        case _ =>
+          t2
+      }
+    }
+
+    def unaOpToTree(op: Int, opvarval: Int): Tree = {
+      op match {
+        case 0 =>
+          Number(0)
+        case 1 =>
+          Number(opvarval)
+        case 2 =>
+          I()
+        case _ =>
+          T(1)
+      }
+    }
+
+    def formulaToTree(leafOps: Seq[Int],leafOpsVarVal: Seq[Int], lvl1Ops: Seq[Int], lvl2Ops: Seq[Int], lvl3Op: Int): Tree = {
+      val leafs = leavesRange.map(i => unaOpToTree(leafOps(i),leafOpsVarVal(i)))
+      val lvl1Nodes = lvl1Range.map(i => binOpToTree(lvl1Ops(i),leafs(2*i),leafs(2*i+1)))
+      val lvl2Nodes = lvl2Range.map(i => binOpToTree(lvl2Ops(i),lvl1Nodes(2*i),lvl1Nodes(2*i+1)))
+      val lvl3Node = binOpToTree(lvl3Op, lvl2Nodes(0),lvl2Nodes(1))
+      lvl3Node
+    }
+
+    def mkFormula(x: IntExpr): IntExpr = {
+      val leafOps = leavesRange.map(i => mkIntVar(s"leafsOp${i}", 0, unaOpDomain.getSize.toInt - 1))
+      val lvl1Ops = lvl1Range.map(i => mkIntVar(s"lvl1Op${i}", 0, binOpDomain.getSize.toInt - 1))
+      val lvl2Ops = lvl2Range.map(i => mkIntVar(s"lvl2Op${i}", 0, binOpDomain.getSize.toInt - 1))
+      val lvl3Op = mkIntVar(s"lvl3Op0", 0, binOpDomain.getSize.toInt - 1)
+
+      val leaves = leavesRange.map(i => UnaryOp(s"leafopvar${i}", leafOps(i), x))
+      val lvl1Nodes = lvl1Range.map(i => BinaryOp(lvl1Ops(i),leaves(2*i),leaves(2*i+1)))
+      val lvl2Nodes = lvl2Range.map(i => BinaryOp(lvl2Ops(i),lvl1Nodes(2*i),lvl1Nodes(2*i+1)))
+      val lvl3Node = BinaryOp(lvl3Op,lvl2Nodes(0),lvl2Nodes(1))
+
+      lvl3Node
+    }
+
+    // solve 1,2,3,4,5: f(i) = i
+    // solve 1,4,9,16,25: f(i) = i^2
+    // solve 2,4,6,8,10: f(i) = 2*i
+    // solve 1,2,3,1,2,3: f(i) = (i mod 3) + 1
+    def solve(): Seq[Solution] = {
+      leavesRange.foreach(i => solver.add(ctx.mkGe(mkIntVar(s"leafopvar${i}"),ctx.mkInt(-5))))
+      solver.add(mkFormulaEq(mkFormula))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp0"),ctx.mkInt(1)))
+      solver.add(ctx.mkEq(mkIntVar("leafsOp1"),ctx.mkInt(2)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp2"),ctx.mkInt(1)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp3"),ctx.mkInt(1)))
+      solver.add(ctx.mkEq(mkIntVar("leafsOp4"),ctx.mkInt(0)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp5"),ctx.mkInt(0)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp6"),ctx.mkInt(0)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp7"),ctx.mkInt(0)))
+      //(4 to 7).foreach(i => solver.add(ctx.mkLe(mkIntVar(s"leafsOp${i}"),ctx.mkInt(2))))
+      //solver.add(ctx.mkEq(mkIntVar("lvl1Op0"),ctx.mkInt(4)))
+      //solver.add(ctx.mkEq(mkIntVar("lvl1Op1"),ctx.mkInt(3)))
+      //solver.add(ctx.mkEq(mkIntVar("lvl1Op2"),ctx.mkInt(3)))
+
+      val status = check()
+      val precision = 16 // number of digits of precision for real values in the model
+      status match {
+        case SmtUnknown(reason) =>
+          throw new Exception(s"SMT check() returned status UNKNOWN: $reason")
+        case SmtUnsatisfiable =>
+          println("No satisfying assignment found")
+          Seq.empty
+        case SmtSatisfiable =>
+          val model = extractModel(precision)
+          println(model)
+          val leafOps = leavesRange.map(i => model(s"leafsOp${i}").toInt)
+          val leafOpsVarVal = leavesRange.map(i => model(s"leafopvar${i}").toInt)
+          val lvl1Ops = lvl1Range.map(i => model(s"lvl1Op${i}").toInt)
+          val lvl2Ops = lvl2Range.map(i => model(s"lvl2Op${i}").toInt)
+          val lvl3Op = model(s"lvl3Op0").toInt
+
+          val aVal = model("a").toInt
+          val bVal = model("b").toInt
+          val tree = formulaToTree(leafOps, leafOpsVarVal, lvl1Ops, lvl2Ops, lvl3Op)
+          val sol = Apply(Div(),Seq(Apply(Minus(),Seq(tree,Apply(Times(),Seq(Number(bVal),T(1))))),Number(aVal)))
+          Seq(Solution(sol,1))
+        case _ => throw new IllegalStateException("Unrecognized SMT status")
+      }
+    }
+  }
+
+  class RecSequenceSolverOrder2(s: Seq[Int]) {
+    val a = mkIntVar("a",1,3)
+    val b = mkIntVar("b",-3,3)
+    val c = mkIntVar("c",-3,3)
+    solver.add(mkIsNonZero(b))
+    solver.add(mkIsNonZero(c))
+
+    val seqDomain = ctx.mkFiniteDomainSort("Dom", s.size)
+    val unaOpDomain = ctx.mkFiniteDomainSort("Dom", 3)
+    val binOpDomain = ctx.mkFiniteDomainSort("Dom", 5)
+
+    val level = 3
+    val leavesRange = (0 to (scala.math.pow(2,level).toInt-1))
+    val lvl1Range = (0 to (scala.math.pow(2,level-1).toInt-1))
+    val lvl2Range = (0 to (scala.math.pow(2,level-2).toInt-1))
+
+    var id = 0
+    def getNext(): String = {
+      id += 1
+      s"x${id}"
+    }
+
+    def mkSeqEq(fun: FuncDecl): BoolExpr = {
+      val eqTerms = s.indices.map(i => ctx.mkEq(ctx.mkApp(fun, ctx.mkNumeral(i, seqDomain)).asInstanceOf[IntExpr], ctx.mkInt(s(i))))
+      mkAnd(eqTerms)
+    }
+
+    def mkFormulaEq(formula: IntExpr => IntExpr): BoolExpr = {
+      val eqTerms = s.indices.filter(_>=2).map(i => {
+        val fi = mkIntVar(s"f_$i")
+        solver.add(ctx.mkEq(fi, formula(ctx.mkInt(i))))
+        ctx.mkEq(fi, ctx.mkAdd(ctx.mkAdd(ctx.mkMul(a,ctx.mkInt(s(i))),ctx.mkMul(b,ctx.mkInt(s(i-1)))),ctx.mkMul(c,ctx.mkInt(s(i-2)))))
+      })
+      mkAnd(eqTerms)
+    }
+
+    def BinaryOp(op: Expr, x: IntExpr, y: IntExpr): IntExpr = {
+      ctx.mkITE(ctx.mkEq(op, ctx.mkInt(0)), ctx.mkAdd(x, y),
+        ctx.mkITE(ctx.mkEq(op, ctx.mkInt(1)), ctx.mkSub(x, y),
+          ctx.mkITE(ctx.mkEq(op, ctx.mkInt(2)), ctx.mkMul(x, y),
+            ctx.mkITE(ctx.mkEq(op, ctx.mkInt(3)), ctx.mkITE(ctx.mkLe(y, ctx.mkInt(0)), y, ctx.mkMod(x, y)),
+              y)))).asInstanceOf[IntExpr]
+    }
+
+    def UnaryOp(opvar: String, op: Expr, x: IntExpr): IntExpr = {
+      var opvarval = ctx.mkIntConst(opvar)
+      solver.add(ctx.mkLe(opvarval,ctx.mkInt(9)))
+      solver.add(ctx.mkGe(opvarval,ctx.mkInt(-1)))
+      ctx.mkITE(ctx.mkEq(op.asInstanceOf[IntExpr], ctx.mkInt(0)), ctx.mkInt(0),
+        ctx.mkITE(ctx.mkEq(op.asInstanceOf[IntExpr], ctx.mkInt(1)), opvarval,
+          x)).asInstanceOf[IntExpr]
+    }
+
+    def binOpToTree(op: Int, t1: Tree, t2: Tree): Tree = {
+      op match {
+        case 0 =>
+          Apply(Plus(),Seq(t1,t2))
+        case 1 =>
+          Apply(Minus(),Seq(t1,t2))
+        case 2 =>
+          Apply(Times(),Seq(t1,t2))
+        case 3 =>
+          Apply(Mod(),Seq(t1,t2))
+        case _ =>
+          t2
+      }
+    }
+
+    def unaOpToTree(op: Int, opvarval: Int): Tree = {
+      op match {
+        case 0 =>
+          Number(0)
+        case 1 =>
+          Number(opvarval)
+        case 2 =>
+          I()
+        case _ =>
+          T(1)
+      }
+    }
+
+    def formulaToTree(leafOps: Seq[Int],leafOpsVarVal: Seq[Int], lvl1Ops: Seq[Int], lvl2Ops: Seq[Int], lvl3Op: Int): Tree = {
+      val leafs = leavesRange.map(i => unaOpToTree(leafOps(i),leafOpsVarVal(i)))
+      val lvl1Nodes = lvl1Range.map(i => binOpToTree(lvl1Ops(i),leafs(2*i),leafs(2*i+1)))
+      val lvl2Nodes = lvl2Range.map(i => binOpToTree(lvl2Ops(i),lvl1Nodes(2*i),lvl1Nodes(2*i+1)))
+      val lvl3Node = binOpToTree(lvl3Op, lvl2Nodes(0),lvl2Nodes(1))
+      lvl3Node
+    }
+
+    def mkFormula(x: IntExpr): IntExpr = {
+      val leafOps = leavesRange.map(i => mkIntVar(s"leafsOp${i}", 0, unaOpDomain.getSize.toInt - 1))
+      val lvl1Ops = lvl1Range.map(i => mkIntVar(s"lvl1Op${i}", 0, binOpDomain.getSize.toInt - 1))
+      val lvl2Ops = lvl2Range.map(i => mkIntVar(s"lvl2Op${i}", 0, binOpDomain.getSize.toInt - 1))
+      val lvl3Op = mkIntVar(s"lvl3Op0", 0, binOpDomain.getSize.toInt - 1)
+
+      val leaves = leavesRange.map(i => UnaryOp(s"leafopvar${i}", leafOps(i), x))
+      val lvl1Nodes = lvl1Range.map(i => BinaryOp(lvl1Ops(i),leaves(2*i),leaves(2*i+1)))
+      val lvl2Nodes = lvl2Range.map(i => BinaryOp(lvl2Ops(i),lvl1Nodes(2*i),lvl1Nodes(2*i+1)))
+      val lvl3Node = BinaryOp(lvl3Op,lvl2Nodes(0),lvl2Nodes(1))
+
+      lvl3Node
+    }
+
+    // solve 1,2,3,4,5: f(i) = i
+    // solve 1,4,9,16,25: f(i) = i^2
+    // solve 2,4,6,8,10: f(i) = 2*i
+    // solve 1,2,3,1,2,3: f(i) = (i mod 3) + 1
+    def solve(): Seq[Solution] = {
+      leavesRange.foreach(i => solver.add(ctx.mkGe(mkIntVar(s"leafopvar${i}"),ctx.mkInt(-5))))
+      solver.add(mkFormulaEq(mkFormula))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp0"),ctx.mkInt(1)))
+      solver.add(ctx.mkEq(mkIntVar("leafsOp1"),ctx.mkInt(2)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp2"),ctx.mkInt(1)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp3"),ctx.mkInt(1)))
+      solver.add(ctx.mkEq(mkIntVar("leafsOp4"),ctx.mkInt(0)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp5"),ctx.mkInt(0)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp6"),ctx.mkInt(0)))
+      solver.add(ctx.mkLe(mkIntVar("leafsOp7"),ctx.mkInt(0)))
+      //(4 to 7).foreach(i => solver.add(ctx.mkLe(mkIntVar(s"leafsOp${i}"),ctx.mkInt(2))))
+      //solver.add(ctx.mkEq(mkIntVar("lvl1Op0"),ctx.mkInt(4)))
+      //solver.add(ctx.mkEq(mkIntVar("lvl1Op1"),ctx.mkInt(3)))
+      //solver.add(ctx.mkEq(mkIntVar("lvl1Op2"),ctx.mkInt(3)))
+
+      val status = check()
+      val precision = 16 // number of digits of precision for real values in the model
+      status match {
+        case SmtUnknown(reason) =>
+          println("Status unknown")
+          Seq.empty
+        case SmtUnsatisfiable =>
+          println("No satisfying assignment found")
+          Seq.empty
+        case SmtSatisfiable =>
+          val model = extractModel(precision)
+          println(model)
+          val leafOps = leavesRange.map(i => model(s"leafsOp${i}").toInt)
+          val leafOpsVarVal = leavesRange.map(i => model(s"leafopvar${i}").toInt)
+          val lvl1Ops = lvl1Range.map(i => model(s"lvl1Op${i}").toInt)
+          val lvl2Ops = lvl2Range.map(i => model(s"lvl2Op${i}").toInt)
+          val lvl3Op = model(s"lvl3Op0").toInt
+
+          val aVal = model("a").toInt
+          val bVal = model("b").toInt
+          val cVal = model("c").toInt
+          val tree = formulaToTree(leafOps, leafOpsVarVal, lvl1Ops, lvl2Ops, lvl3Op)
+          val sol = Apply(Div(),Seq(Apply(Minus(),Seq(Apply(Minus(),Seq(tree,Apply(Times(),Seq(Number(bVal),T(1))))),Apply(Times(),Seq(Number(cVal),T(2))))),Number(aVal)))
+          Seq(Solution(sol,1))
         case _ => throw new IllegalStateException("Unrecognized SMT status")
       }
     }
