@@ -87,7 +87,6 @@ object IqTest extends Dataset {
   )
 
   val medium = Seq(
-
     DatasetSequence(
       NumberSequence(Seq(-2, 5, -4, 3, 6)),
       1,
@@ -97,14 +96,138 @@ object IqTest extends Dataset {
     ),
 
     DatasetSequence(
-      NumberSequence(Seq(1, 4, 9, 16, 25, 36, 49)),
+      NumberSequence(Seq(1, 4, 9, 16, 25)),
       36,
       Apply(Plus(), Seq(
         T(1), Apply(Plus(), Seq(Apply(Times(), Seq(
           Number(2), I()
         )), Number(1)))
       ))
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(75, 15, 25, 5, 15)),
+      3,
+      Apply(
+        Plus(),
+        Seq(
+          Apply(Div(), Seq(
+            Apply(Times(), Seq(
+              Apply(Mod(), Seq(
+                I(), Number(2)
+              )),
+              T(1)
+            )),
+            Number(5)
+          )),
+          Apply(Times(), Seq(
+            Apply(Mod(), Seq(
+              Apply(Plus(), Seq(
+                I(), Number(1)
+              )),
+              Number(2)
+            )),
+            T(1)
+          )),
+          Number(10)
+        )
+      )
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(1, 2, 6, 24, 120)),
+      720,
+      Apply(Times(), Seq(
+        T(1),
+        Apply(Plus(), Seq(I(), Number(1)))
+      ))
+    ),
+
+    //    Too annoying to encode
+    //    DatasetSequence(
+    //      NumberSequence(Seq(183, 305, 527, 749, 961), 1),
+    //      720,
+    //      ???)
+
+    DatasetSequence(
+      NumberSequence(Seq(16, 22, 34, 58, 106)),
+      202,
+      Apply(Minus(), Seq(
+        Apply(Times(), Seq(T(1), Number(3))),
+        Apply(Times(), Seq(T(2), Number(2)))
+      ))
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(17, 40, 61, 80, 97)),
+      112,
+      Apply(Minus(), Seq(
+        Apply(Minus(), Seq(
+          Apply(Times(), Seq(T(1), Number(2))),
+          T(2)
+        )),
+        Number(2)
+      ))
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(55, 34, 21, 13, 8)),
+      5,
+      Apply(Minus(), Seq(
+        T(2),
+        T(1)
+      ))
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(259, 131, 67, 35, 19)),
+      11,
+      Apply(Div(), Seq(
+        Apply(Plus(), Seq(T(1), Number(3))),
+        Number(2)
+      ))
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(93, 74, 57, 42, 29)),
+      18,
+      Apply(
+        Plus(),
+        Seq(
+          Apply(Minus(), Seq(T(1), Number(19))),
+          Apply(Times(), Seq(I(), Number(2)))
+        )
+      )
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(7, 21, 14, 42, 28)),
+      84,
+      Apply(Times(), Seq(
+        T(2),
+        Number(2)
+      ))
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(2, -12, -32, -58, -90)),
+      -128,
+      Apply(
+        Minus(),
+        Seq(
+          Apply(Minus(), Seq(T(1), Number(14))),
+          Apply(Times(), Seq(I(), Number(6)))
+        )
+      )
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(0, 9, 36, 81, 144)),
+      225,
+      Apply(Pow(), Seq(
+        Apply(Times(), Seq(Number(3), I())),
+        Number(2)
+      ))
     )
   )
-
 }

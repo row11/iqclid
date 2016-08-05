@@ -407,104 +407,102 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
     }
   }
 
-  //  def solveSequence(s: Seq[Int]) = {
-  //    (new SequenceSolver(s)).solve()
-  //  }
-  //
-  //  class SequenceSolver(s: Seq[Int]) {
-  //    val seqDomain = ctx.mkFiniteDomainSort("Dom", s.size)
-  //    val unaOpDomain = ctx.mkFiniteDomainSort("Dom", 6)
-  //    val binOpDomain = ctx.mkFiniteDomainSort("Dom", 4)
-  //
-  //    def mkSeqEq(fun: FuncDecl): BoolExpr = {
-  //      val eqTerms = s.indices.map(i => ctx.mkEq(ctx.mkApp(fun, ctx.mkNumeral(i, seqDomain)).asInstanceOf[IntExpr], ctx.mkInt(s(i))))
-  //      mkAnd(eqTerms)
-  //    }
-  //
-  //    def mkFormulaEq(formula: IntExpr => IntExpr): BoolExpr = {
-  //      val eqTerms = s.indices.map(i => {
-  //        val fi = mkIntVar(s"f_$i")
-  //        addAuxConstraint(ctx.mkEq(fi, formula(ctx.mkInt(i))))
-  //        ctx.mkEq(fi, ctx.mkInt(s(i)))
-  //      })
-  //      mkAnd(eqTerms)
-  //    }
-  //
-  //    def BinaryOp(op: Expr, x: IntExpr, y: IntExpr): IntExpr = {
-  //      ctx.mkITE(ctx.mkEq(op, ctx.mkInt(0)), ctx.mkAdd(x, y),
-  //        ctx.mkITE(ctx.mkEq(op, ctx.mkInt(1)), ctx.mkMul(x, y),
-  //          ctx.mkITE(ctx.mkEq(op, ctx.mkInt(2)), ctx.mkITE(ctx.mkLe(y, ctx.mkInt(0)), y, ctx.mkMod(x, y)),
-  //            y))).asInstanceOf[IntExpr]
-  //    }
-  //
-  //    def UnaryOp(op: Expr, x: IntExpr): IntExpr = {
-  //      ctx.mkITE(ctx.mkEq(op, ctx.mkInt(0)), ctx.mkInt(0),
-  //        ctx.mkITE(ctx.mkEq(op, ctx.mkInt(1)), ctx.mkInt(1),
-  //          ctx.mkITE(ctx.mkEq(op, ctx.mkInt(2)), ctx.mkInt(2),
-  //            ctx.mkITE(ctx.mkEq(op, ctx.mkInt(3)), ctx.mkInt(3),
-  //              ctx.mkITE(ctx.mkEq(op, ctx.mkInt(4)), ctx.mkUnaryMinus(x),
-  //                x))))).asInstanceOf[IntExpr]
-  //    }
-  //
-  //    def mkFormula(x: IntExpr): IntExpr = {
-  //      val unaop1 = mkIntVar("unaop1", 0, unaOpDomain.getSize.toInt - 1)
-  //      val unaop2 = mkIntVar("unaop2", 0, unaOpDomain.getSize.toInt - 1)
-  //      val unaop3 = mkIntVar("unaop3", 0, unaOpDomain.getSize.toInt - 1)
-  //      val unaop4 = mkIntVar("unaop4", 0, unaOpDomain.getSize.toInt - 1)
-  //      val unaop5 = mkIntVar("unaop5", 0, unaOpDomain.getSize.toInt - 1)
-  //      val unaop6 = mkIntVar("unaop6", 0, unaOpDomain.getSize.toInt - 1)
-  //      val unaop7 = mkIntVar("unaop7", 0, unaOpDomain.getSize.toInt - 1)
-  //      val binop1 = mkIntVar("binop1", 0, binOpDomain.getSize.toInt - 1)
-  //      val binop2 = mkIntVar("binop2", 0, binOpDomain.getSize.toInt - 1)
-  //      val binop3 = mkIntVar("binop3", 0, binOpDomain.getSize.toInt - 1)
-  //
-  //      UnaryOp(
-  //        unaop1,
-  //        BinaryOp(
-  //          binop1,
-  //          UnaryOp(
-  //            unaop2,
-  //            BinaryOp(
-  //              binop2,
-  //              UnaryOp(unaop4, x),
-  //              UnaryOp(unaop5, x)
-  //            )
-  //          ),
-  //          UnaryOp(
-  //            unaop3,
-  //            BinaryOp(
-  //              binop3,
-  //              UnaryOp(unaop6, x),
-  //              UnaryOp(unaop7, x)
-  //            )
-  //          )
-  //        )
-  //      )
-  //    }
-  //
-  //    // solve 1,2,3,4,5: f(i) = i
-  //    // solve 1,4,9,16,25: f(i) = i^2
-  //    // solve 2,4,6,8,10: f(i) = 2*i
-  //    // solve 1,2,3,1,2,3: f(i) = (i mod 3) + 1
-  //    def solve() = {
-  //      solver.add(mkFormulaEq(mkFormula))
-  ////      auxConstraints.foreach(c => solver.add(c))
-  //
-  //      val status = check()
-  //      val precision = 16 // number of digits of precision for real values in the model
-  //      status match {
-  //        case SmtUnknown(reason) =>
-  //          throw new Exception(s"SMT check() returned status UNKNOWN: $reason")
-  //        case SmtUnsatisfiable =>
-  //          println("No satisfying assignment found")
-  //          Seq.empty
-  //        case SmtSatisfiable =>
-  //          val model = extractModel(precision)
-  //          println(model)
-  //          println("SMT solution: " + model.mkString(", "))
-  //          Seq(model)
-  //        case _ => throw new IllegalStateException("Unrecognized SMT status")
-  //      }
-  //    }
-  //  }
+  def solveSequence(s: Seq[Int]) = {
+    (new SequenceSolver(s)).solve()
+  }
+
+  class SequenceSolver(s: Seq[Int]) {
+    val seqDomain = ctx.mkFiniteDomainSort("Dom", s.size)
+    val unaOpDomain = ctx.mkFiniteDomainSort("Dom", 6)
+    val binOpDomain = ctx.mkFiniteDomainSort("Dom", 4)
+
+    def mkSeqEq(fun: FuncDecl): BoolExpr = {
+      val eqTerms = s.indices.map(i => ctx.mkEq(ctx.mkApp(fun, ctx.mkNumeral(i, seqDomain)).asInstanceOf[IntExpr], ctx.mkInt(s(i))))
+      mkAnd(eqTerms)
+    }
+
+    def mkFormulaEq(formula: IntExpr => IntExpr): BoolExpr = {
+      val eqTerms = s.indices.map(i => {
+        val fi = mkIntVar(s"f_$i")
+        solver.add(ctx.mkEq(fi, formula(ctx.mkInt(i))))
+        ctx.mkEq(fi, ctx.mkInt(s(i)))
+      })
+      mkAnd(eqTerms)
+    }
+
+    def BinaryOp(op: Expr, x: IntExpr, y: IntExpr): IntExpr = {
+      ctx.mkITE(ctx.mkEq(op, ctx.mkInt(0)), ctx.mkAdd(x, y),
+        ctx.mkITE(ctx.mkEq(op, ctx.mkInt(1)), ctx.mkMul(x, y),
+          ctx.mkITE(ctx.mkEq(op, ctx.mkInt(2)), ctx.mkITE(ctx.mkLe(y, ctx.mkInt(0)), y, ctx.mkMod(x, y)),
+            y))).asInstanceOf[IntExpr]
+    }
+
+    def UnaryOp(op: Expr, x: IntExpr): IntExpr = {
+      ctx.mkITE(ctx.mkEq(op, ctx.mkInt(0)), ctx.mkInt(0),
+        ctx.mkITE(ctx.mkEq(op, ctx.mkInt(1)), ctx.mkInt(1),
+          ctx.mkITE(ctx.mkEq(op, ctx.mkInt(2)), ctx.mkInt(2),
+            ctx.mkITE(ctx.mkEq(op, ctx.mkInt(3)), ctx.mkInt(3),
+              ctx.mkITE(ctx.mkEq(op, ctx.mkInt(4)), ctx.mkUnaryMinus(x),
+                x))))).asInstanceOf[IntExpr]
+    }
+
+    def mkFormula(x: IntExpr): IntExpr = {
+      val unaop1 = mkIntVar("unaop1", 0, unaOpDomain.getSize.toInt - 1)
+      val unaop2 = mkIntVar("unaop2", 0, unaOpDomain.getSize.toInt - 1)
+      val unaop3 = mkIntVar("unaop3", 0, unaOpDomain.getSize.toInt - 1)
+      val unaop4 = mkIntVar("unaop4", 0, unaOpDomain.getSize.toInt - 1)
+      val unaop5 = mkIntVar("unaop5", 0, unaOpDomain.getSize.toInt - 1)
+      val unaop6 = mkIntVar("unaop6", 0, unaOpDomain.getSize.toInt - 1)
+      val unaop7 = mkIntVar("unaop7", 0, unaOpDomain.getSize.toInt - 1)
+      val binop1 = mkIntVar("binop1", 0, binOpDomain.getSize.toInt - 1)
+      val binop2 = mkIntVar("binop2", 0, binOpDomain.getSize.toInt - 1)
+      val binop3 = mkIntVar("binop3", 0, binOpDomain.getSize.toInt - 1)
+
+      UnaryOp(
+        unaop1,
+        BinaryOp(
+          binop1,
+          UnaryOp(
+            unaop2,
+            BinaryOp(
+              binop2,
+              UnaryOp(unaop4, x),
+              UnaryOp(unaop5, x)
+            )
+          ),
+          UnaryOp(
+            unaop3,
+            BinaryOp(
+              binop3,
+              UnaryOp(unaop6, x),
+              UnaryOp(unaop7, x)
+            )
+          )
+        )
+      )
+    }
+
+    // solve 1,2,3,4,5: f(i) = i
+    // solve 1,4,9,16,25: f(i) = i^2
+    // solve 2,4,6,8,10: f(i) = 2*i
+    // solve 1,2,3,1,2,3: f(i) = (i mod 3) + 1
+    def solve() = {
+      solver.add(mkFormulaEq(mkFormula))
+      val status = check()
+      val precision = 16 // number of digits of precision for real values in the model
+      status match {
+        case SmtUnknown(reason) =>
+          throw new Exception(s"SMT check() returned status UNKNOWN: $reason")
+        case SmtUnsatisfiable =>
+          println("No satisfying assignment found")
+          Seq.empty
+        case SmtSatisfiable =>
+          val model = extractModel(precision)
+          println(model)
+          println("SMT solution: " + model.mkString(", "))
+          Seq(model)
+        case _ => throw new IllegalStateException("Unrecognized SMT status")
+      }
+    }
+  }
 }
