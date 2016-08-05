@@ -6,7 +6,7 @@ class SearchSpec extends UnitSpec{
 
   "baseline search" should "do 1 2 3 4 5" in {
     val s = NumberSequence(Seq(1, 2, 3, 4, 5, 6, 7, 8, 9), 1)
-    val search = new BaselineSearch(0.5, 100, 30)
+    val search = new BaselineSearch(0.5, 1000, 300)
     val best = search.best(s)
     assert(best == Apply(Plus(), List(I(), Number(1))))
   }
@@ -22,6 +22,6 @@ class SearchSpec extends UnitSpec{
     val s = NumberSequence(Seq(1, 1, 2, 3, 5, 8, 13), 2)
     val search = new BaselineSearch(0.5, 1000, 30)
     val best = search.best(s)
-    assert(best == Apply(Plus(), List(T(1), T(2))))
+    assert(best == Apply(Plus(), List(T(1), T(2))) || best == Apply(Plus(), List(T(2), T(1))))
   }
 }

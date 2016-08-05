@@ -3,32 +3,30 @@ package org.allenai.iqclid
 import org.allenai.iqclid.RandUtil._
 import org.allenai.iqclid.api.{I, T, _}
 
-trait Search {
+trait Search extends Solver {
 
   val fitness: Fitness
 
   /** Given the current set of tree candidates, produce the next set. */
   def proposals(trees: Seq[Tree]): Seq[Tree]
 
-  /** The actual search algorithm. */
-  def search(target: NumberSequence): Seq[Tree]
-
   def best(target: NumberSequence): Tree = {
-    search(target).minBy(tree => fitness.eval(tree, target))
+    solve(target).minBy(sol => sol.fitness).tree
   }
 }
 
 abstract class BeamSearch(maxSteps: Int, bestk: Int) extends Search {
-  override def search(target: NumberSequence): Seq[Tree] = {
-    (0 until maxSteps).foldLeft(Seq[Tree]()) {
-      case (accTrees, step) =>
+  override def solve(target: NumberSequence): Seq[Solution] = {
+    (0 until maxSteps).foldLeft(Seq[Solution]()) {
+      case (accSols, step) =>
         println(s"STEP: $step")
+        val accTrees = accSols.map(_.tree)
         val p = proposals(accTrees)
-        val candidates = (accTrees ++ proposals(accTrees)).distinct.sortBy {
-          tree => fitness.eval(tree, target)
-        }
-        val result = candidates.take(bestk)
-        result
+        val candidates = (accTrees ++ proposals(accTrees))
+            .distinct
+            .map(x => Solution(x, fitness.eval(x, target)))
+            .sortBy(_.fitness)
+        candidates.take(bestk)
     }
   }
 }

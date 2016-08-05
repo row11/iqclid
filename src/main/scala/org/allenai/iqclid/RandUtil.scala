@@ -26,7 +26,7 @@ object RandUtil {
 
   def pickNRandom[T](things: Seq[T], n: Int): Seq[T] = {
     if (n < things.size) {
-      things.sortBy(_ => scala.util.Random.nextInt()).take(n)
+      things.zip(things.map(_ => scala.util.Random.nextInt())).sortBy(_._2).map(_._1).take(n)
     } else {
       throw new RuntimeException(s"Trying to pick $n things from set of size ${things.size}")
     }

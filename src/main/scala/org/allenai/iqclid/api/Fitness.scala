@@ -17,7 +17,7 @@ class BaselineFitness(alpha: Double) extends Fitness {
     try {
       val hypothesis = Evaluator.evaluate(tree, target.baseCases, target.length)
       // l1 distance
-      Utils.l1Dist(target.seq, hypothesis)
+      Utils.l2Dist(target.seq, hypothesis)
     } catch {
       case e: BadTreeException =>
         Double.MaxValue
