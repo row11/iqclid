@@ -235,4 +235,85 @@ object IqTest extends Dataset {
       ))
     )
   )
+
+  val eulid = Seq(
+    DatasetSequence(
+      NumberSequence(Seq(7, 14, 28, 56, 112), 1),
+      224,
+      Apply(Times(), Seq(T(1), Number(2)))),
+
+    DatasetSequence(
+      NumberSequence(Seq(-2, -1, 0, 1, 2, 1, 0, -1, -2, -1, 0, 1), 8),
+      2,
+      Apply(Plus(), Seq(T(8), Number(0)))),
+
+    DatasetSequence(
+      NumberSequence(Seq(1, 2, 3, 1, 2, 3, 1, 2), 0),
+      3,
+      Apply(Plus(), Seq(
+        Number(1),
+        Apply( Mod(), Seq(I(), Number(3)))
+      ))),
+
+    DatasetSequence(
+      NumberSequence(Seq(1, 2, 3, 1, 2, 3, 1, 2), 0),
+      3,
+      Apply(Plus(), Seq(
+        Number(1),
+        Apply( Mod(), Seq(I(), Number(3)))
+      ))),
+
+    DatasetSequence(
+      NumberSequence(Seq(-1, 0, 1, -1, 0, 1), 0),
+      -1,
+      Apply(Plus(), Seq(
+        Number(-1),
+        Apply( Mod(), Seq(I(), Number(3)))
+      ))),
+
+    DatasetSequence(
+      NumberSequence(Seq(-1, 1, 2, -1, 1, 2, -1, 1, 2), 3),
+      -1,
+      Apply(Plus(), Seq(
+        Number(0),
+        T(3)
+      ))),
+
+    DatasetSequence(
+      NumberSequence(Seq(1, 2, 1, 2, 1, 2), 0),
+      1,
+      Apply(Plus(), Seq(
+        Number(1),
+        Apply( Mod(), Seq(I(), Number(2)))
+      )))
+  )
+
+
+  val agiPaper = Seq(
+    DatasetSequence(
+      NumberSequence(Seq(2,5,8,11,14,17,20), 1),
+      23,
+      Apply(Plus(), Seq(T(1), Number(3)))),
+
+    DatasetSequence(
+      NumberSequence(Seq(25,22,19,16,13,10,7), 1),
+      4,
+      Apply(Plus(), Seq(T(1), Number(-3)))),
+
+    DatasetSequence(
+      NumberSequence(Seq(8,12,16,20,24,28,32), 1),
+      36,
+      Apply(Plus(), Seq(T(1), Number(4)))),
+
+    DatasetSequence(
+      NumberSequence(Seq(54,48,42,36,30,24), 1),
+      18,
+      Apply(Plus(), Seq(T(1), Number(-6)))),
+
+    DatasetSequence(
+      NumberSequence(Seq(28,33,31,36,34,39), 2),
+      37,
+      Apply(Plus(), Seq(T(2), Number(3))))
+
+  )
 }
