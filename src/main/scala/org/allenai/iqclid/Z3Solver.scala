@@ -154,7 +154,7 @@ class Z3Solver extends Solver {
   /** Generate proposal trees */
   override def solve(s: NumberSequence): Seq[Solution] = {
     val f = new AccuracyFirstFitness(0.5)
-    getFunctionTree(2, s, 1).map(x => Solution(x, f.eval(x, s))) ++
-    getFunctionTree(2, s, 2).map(x => Solution(x, f.eval(x, s)))
+    getFunctionTree(1, s, 1).map(x => Solution(x, f.eval(x, s))) ++
+    getFunctionTree(1, s, 2).map(x => Solution(x, f.eval(x, s)))
   }
 }
