@@ -9,6 +9,12 @@ object IqTest extends Dataset {
 
   val easy = Seq(
     DatasetSequence(
+      NumberSequence(Seq(1, 1, 2, 3, 5, 8, 13)),
+      21,
+      Apply(Plus(), Seq(T(1), T(2)))
+    ),
+
+    DatasetSequence(
       NumberSequence(Seq(2, 4, 9, 11, 16)),
       18,
       Apply(Plus(), Seq(
