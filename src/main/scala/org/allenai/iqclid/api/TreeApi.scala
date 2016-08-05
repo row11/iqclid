@@ -14,6 +14,25 @@ object Tree {
         1
     }
   }
+
+  def symbolComplexity(tree: Tree): Int = {
+    tree match {
+      case Apply(op, args) =>
+        val subTrees = args.map(symbolComplexity).sum
+        val thisNode = op match {
+          case Plus() => 1
+          case Minus() => 1
+          case Times() => 3
+          case Div() => 5
+          case Mod() =>  7
+          case Pow() => 10
+        }
+        thisNode + subTrees
+      case Number(i) => i
+      case I() => 1
+      case T(i) => 2*i
+    }
+  }
 }
 
 sealed trait Tree {
