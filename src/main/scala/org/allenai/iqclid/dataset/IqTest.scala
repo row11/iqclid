@@ -1,6 +1,6 @@
 package org.allenai.iqclid.dataset
 
-import org.allenai.iqclid.{ DatasetSequence, _ }
+import org.allenai.iqclid.{DatasetSequence, _}
 import org.allenai.iqclid.api._
 
 object IqTest extends Dataset {
@@ -254,7 +254,83 @@ object IqTest extends Dataset {
     DatasetSequence(
       NumberSequence(Seq(28,33,31,36,34,39), 2),
       37,
-      Apply(Plus(), Seq(T(2), Number(3))))
+      Apply(Plus(), Seq(T(2), Number(3)))),
 
+    DatasetSequence(
+      NumberSequence(Seq(6,8,5,7,4,6,3), 2),
+      5,
+      Apply(Plus(), Seq(T(2), Number(-1)))),
+
+    DatasetSequence(
+      NumberSequence(Seq(9,20,6,17,3,14,0), 2),
+      11,
+      Apply(Plus(), Seq(T(2), Number(-3)))),
+
+    DatasetSequence(
+      NumberSequence(Seq( 12,15,8,11,4,7,0), 2),
+      3,
+      Apply(Plus(), Seq(T(2), Number(-4)))),
+
+    DatasetSequence(
+      NumberSequence(Seq(4,11,15,26,41,67), 2),
+      108,
+      Apply(Plus(), Seq(T(2), T(1)))),
+
+    DatasetSequence(
+      NumberSequence(Seq(3,6,12,24,48,96), 1),
+      192,
+      Apply(Times(), Seq(T(1), Number(2)))),
+
+    DatasetSequence(
+      NumberSequence(Seq(3,7,15,31,63,127), 1),
+      255,
+      Apply (Plus(), Seq(Apply(Times(), Seq(T(1), Number(2))), Number(1)))
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(2,3,5,9,17,33,65), 1),
+      129,
+      Apply (Plus(), Seq(Apply(Times(), Seq(T(1), Number(2))), Number(-1)))
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq( 2,12,21,29,36,42,47), 1),
+      51,
+      Apply (Plus(), Seq(
+          Apply(Plus(), Seq(T(1), Number(12))),
+          Apply(Times(), Seq(I(), Number(-1)))
+        )
+      )
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(148,84,52,36,28,24), 1),
+      22,
+      Apply (Plus(), Seq(
+          Apply(Div(), Seq(T(1), Number(2))),
+          Number(10)
+        )
+      )
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(148,84,52,36,28,24), 1),
+      22,
+      Apply (Plus(), Seq(
+        Apply(Div(), Seq(T(1), Number(2))),
+        Number(10)
+      )
+      )
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(2,5,9,19,37,75,149), 1),
+      299,
+      Apply (Plus(), Seq(
+          Apply(Times(), Seq(T(1), Number(2))),
+          Apply(Pow(), Seq(Number(-1), I()))
+        )
+      )
+    )
   )
 }
