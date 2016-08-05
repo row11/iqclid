@@ -5,7 +5,9 @@ import org.allenai.iqclid.api._
 
 object IqTest extends Dataset {
 
-  val sequences = Seq(
+  val sequences = easy
+
+  val easy = Seq(
     DatasetSequence(
       NumberSequence(Seq(2, 4, 9, 11, 16), 1),
       18,
@@ -74,6 +76,27 @@ object IqTest extends Dataset {
             I(), Number(1)
           ))
         ))
+      ))
+    )
+  )
+
+  val medium = Seq(
+
+    DatasetSequence(
+      NumberSequence(Seq(-2, 5, -4, 3, 6), 2),
+      1,
+      Apply(Minus(), Seq(
+        T(2), Number(2)
+      ))
+    ),
+
+    DatasetSequence(
+      NumberSequence(Seq(1, 4, 9, 16, 25), 1),
+      36,
+      Apply(Plus(), Seq(
+        T(1), Apply(Plus(), Seq(Apply(Times(), Seq(
+          Number(2), I()
+        )), Number(1)))
       ))
     )
   )

@@ -1,9 +1,9 @@
-package org.allenai.euclid
+package org.allenai.iqclid
 
 import java.util
 import java.util.concurrent.Callable
 
-import org.allenai.euclid.api._
+import org.allenai.iqclid.api._
 
 object GPSolver {
   def main(args: Array[String]): Unit = {

@@ -6,6 +6,11 @@ scalaVersion := "2.11.8"
 
 fork in run := true
 
+// Manual steps to fix clojure plugin [publishes it in local artifact repo]:
+// $ git clone https://github.com/cristipp/sbt-clojure.git
+// $ cd sbt-clojure
+// $ sbt publish-local
+
 seq(clojure.settings :_*)
 
 libraryDependencies += "org.clojure" % "clojure" % "1.5.1"
