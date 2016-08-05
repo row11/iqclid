@@ -120,16 +120,21 @@ object IqTest extends Dataset {
             )),
             Number(5)
           )),
-          Apply(Times(), Seq(
-            Apply(Mod(), Seq(
-              Apply(Plus(), Seq(
-                I(), Number(1)
+          Apply(
+            Plus(),
+            Seq(
+              Apply(Times(), Seq(
+                Apply(Mod(), Seq(
+                  Apply(Plus(), Seq(
+                    I(), Number(1)
+                  )),
+                  Number(2)
+                )),
+                T(1)
               )),
-              Number(2)
-            )),
-            T(1)
-          )),
-          Number(10)
+              Number(10)
+            )
+          )
         )
       )
     ),

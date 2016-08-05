@@ -78,7 +78,7 @@ object Evaluator {
       case I() => index
       case T(i) =>
         if (index - i < 0) {
-          throw new BadTreeException(s"Bad inded $tree")
+          throw new Exception(s"Bad index $tree")
         }
         seqSoFar(index - i)
       case Apply(op, args) =>
@@ -108,10 +108,10 @@ object Evaluator {
               evaluateInternal(el1, seqSoFar, index), evaluateInternal(el2, seqSoFar, index)
             )
           case _ =>
-            throw new BadTreeException(s"Bad apply $tree")
+            throw new Exception(s"Bad apply $tree")
         }
       case _ =>
-        throw new BadTreeException(s"Bad tree $tree")
+        throw new Exception(s"Bad tree $tree")
     }
   }
 }

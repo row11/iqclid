@@ -58,7 +58,6 @@
             ;; since we don't care about keeping the whole population
             ;; around, we can save off the tree and score like this
         [tree score] (rest (run-genetic-programming options))]
-      (println "Done!")
       (.set box 0 (to-java tree))
       (.set box 1 score)))
 

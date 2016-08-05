@@ -16,21 +16,12 @@ object GPSolver {
       //      val fitness = new SmallFirstFitness(0.1)
       val solver = new GPSolver(fitness)
       //    val sequence = NumberSequence(Seq(1, 2, 3, 4, 5), 1)
-      (IqTest.easy ++ IqTest.medium).foreach {
-        sequence =>
-          val results = solver.solve(sequence.numberSequence)
-          val tree = results.head.tree
-          val actualSequence = Evaluator.evaluate(
-            tree, sequence.numberSequence.baseCases(tree), sequence.numberSequence.length
-          )
-          println(
-            s"""actual: ${actualSequence}
-               |actual: ${results.head}
-               |expected: ${sequence.numberSequence.seq}
-               |expected: ${sequence.answer}
-             """.stripMargin
-          )
-      }
+      val evaluator = new Evaluator
+      val evals = evaluator.eval(IqTest.easy ++ IqTest.medium, solver)
+      evaluator.report(evals)
+    } catch {
+      case ex: Exception =>
+        println(ex)
     } finally {
       sys.exit(0)
     }
@@ -45,22 +36,27 @@ object GPSolver {
     tree match {
       case list: util.ArrayList[Object] =>
         val elems = list.asScala
-        val op = elems.head.toString match {
-          case "+" =>
-            Plus()
-          case "-" =>
-            Minus()
-          case "*" =>
-            Times()
-          case "/" =>
-            Div()
-          case "mod" =>
-            Mod()
-          case "pow" =>
-            Pow()
-        }
         val args = elems.tail.map(toScalaRec)
-        Apply(op, args)
+        elems.head.toString match {
+          case "+" =>
+            require(args.size == 2)
+            Apply(Plus(), args)
+          case "-" =>
+            require(args.size == 2)
+            Apply(Minus(), args)
+          case "*" =>
+            require(args.size == 2)
+            Apply(Times(), args)
+          case "/" =>
+            require(args.size == 2)
+            Apply(Div(), args)
+          case "mod" =>
+            require(args.size == 2)
+            Apply(Mod(), args)
+          case "pow" =>
+            require(args.size == 2)
+            Apply(Pow(), args)
+        }
       case l: java.lang.Long =>
         Number(l.intValue())
       case s: clojure.lang.Symbol =>
