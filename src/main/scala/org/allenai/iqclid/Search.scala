@@ -42,7 +42,8 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends BeamSearc
     }
     val createLeaves = (0 until 5).map(Number(_)) ++ Seq(T(1), T(2), I())
     val replaceSubtrees = trees.map(replaceRandomNode)
-    mergeTrees ++ createLeaves ++ replaceSubtrees
+    val addToSubtree = trees.map(addToTree)
+    mergeTrees ++ createLeaves ++ replaceSubtrees ++ addToSubtree
 
   }
 

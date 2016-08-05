@@ -26,17 +26,7 @@ case class DatasetSequence(numberSequence: NumberSequence, nextTerm: Int, answer
 case class NumberSequence(seq: Seq[Int]) {
   val length = seq.length
   def baseCases(tree: Tree): Seq[Int] = {
-    seq.take(baseCount(tree))
+    seq.take(tree.baseCount(tree))
   }
 
-  private def baseCount(tree: Tree): Int = {
-    tree match {
-      case T(i) =>
-        i
-      case Apply(_, args) =>
-        args.map(baseCount).max
-      case _ =>
-        0
-    }
-  }
 }
