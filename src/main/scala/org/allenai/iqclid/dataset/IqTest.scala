@@ -97,7 +97,7 @@ object IqTest extends Dataset {
     ),
 
     DatasetSequence(
-      NumberSequence(Seq(1, 4, 9, 16, 25)),
+      NumberSequence(Seq(1, 4, 9, 16, 25, 36, 49)),
       36,
       Apply(Plus(), Seq(
         T(1), Apply(Plus(), Seq(Apply(Times(), Seq(

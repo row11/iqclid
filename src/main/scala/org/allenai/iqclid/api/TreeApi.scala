@@ -6,12 +6,16 @@ object Tree {
   )
   def size(tree: Tree): Int = {
     tree match {
-      case Apply(_, args) => 1 + args.map(size).sum
-      case l: Leaf => 1
+      case Apply(_, args) =>
+        1 + args.map(size).sum
+      case Number(n) =>
+        n
+      case l: Leaf =>
+        1
     }
   }
-
 }
+
 sealed trait Tree {
   override def toString = {
     this match {
@@ -102,7 +106,7 @@ object Evaluator {
           case (Pow(), Seq(el1, el2)) =>
             Math.pow(
               evaluateInternal(el1, seqSoFar, index), evaluateInternal(el2, seqSoFar, index)
-            ).toInt
+            )
           case _ =>
             throw new BadTreeException(s"Bad apply $tree")
         }

@@ -16,7 +16,7 @@ object GPSolver {
       //      val fitness = new SmallFirstFitness(0.1)
       val solver = new GPSolver(fitness)
       //    val sequence = NumberSequence(Seq(1, 2, 3, 4, 5), 1)
-      IqTest.easy.foreach {
+      (IqTest.easy ++ IqTest.medium).foreach {
         sequence =>
           val results = solver.solve(sequence.numberSequence)
           val tree = results.head.tree
