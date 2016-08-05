@@ -28,7 +28,7 @@ object Tree {
           case Pow() => 10
         }
         thisNode + subTrees
-      case Number(i) => i
+      case Number(i) => Math.abs(i)
       case I() => 1
       case T(i) => 2*i
     }
