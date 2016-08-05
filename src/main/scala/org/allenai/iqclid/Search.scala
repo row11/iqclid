@@ -19,7 +19,7 @@ abstract class BeamSearch(maxSteps: Int, bestk: Int) extends Search {
   override def solve(target: NumberSequence): Seq[Solution] = {
     (0 until maxSteps).foldLeft(Seq[Solution]()) {
       case (accSols, step) =>
-        println(s"STEP: $step")
+//        println(s"STEP: $step")
         val accTrees = accSols.map(_.tree)
         val p = proposals(accTrees)
         val candidates = (accTrees ++ proposals(accTrees))

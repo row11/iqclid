@@ -15,7 +15,6 @@ trait Dataset {
         generated == s.numberSequence.seq :+ s.nextTerm
     }
   }
-
 }
 
 case class DatasetSequence(numberSequence: NumberSequence, nextTerm: Int, answer: Tree,

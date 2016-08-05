@@ -18,7 +18,7 @@ object GPSolver {
       //    val sequence = NumberSequence(Seq(1, 2, 3, 4, 5), 1)
       val evaluator = new Evaluator
       val evals = evaluator.eval(IqTest.easy ++ IqTest.medium, solver)
-      evaluator.report(evals)
+      evaluator.report(evals, "Easy and Med", "GP SOLVER")
     } catch {
       case ex: Exception =>
         println(ex)

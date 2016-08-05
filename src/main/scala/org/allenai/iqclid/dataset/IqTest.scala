@@ -183,7 +183,7 @@ object IqTest extends Dataset {
       )), 2)
   )
 
-  val eulid = Seq(
+  val euclid = Seq(
     DatasetSequence(
       NumberSequence(Seq(7, 14, 28, 56, 112)),
       224,
