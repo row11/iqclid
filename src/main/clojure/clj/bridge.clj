@@ -31,7 +31,7 @@
   (to-java-rec (nth tree 2)))
 
 ;; (def functions '[[+ 2][- 2][* 2][/ 2][mod 2][pow 2]])
-(def functions '[[+ 2][- 2][* 2][/ 2][mod 2]])
+(def functions '[[+ 2][- 2][* 2][/ 2][mod 2][pow 2]])
 
 (def parameters ['i 't1 't2])
 
