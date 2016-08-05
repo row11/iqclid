@@ -24,7 +24,7 @@ case class SmtUnknown(reason: String) extends SmtStatus {
 class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
 
   /** z3 context. expressions are created here as pure data. */
-  private val ctx: Context = new Context
+  val ctx: Context = new Context
 
   /** Bounded integers solver.
     * From http://rise4fun.com/Z3/tutorialcontent/strategies.
@@ -362,8 +362,8 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
 
   /** check SMT program for satisfiability */
   def check(): SmtStatus = {
-    println("checking Z3 program for satisfiability")
-    println(s"SMT program:\n${solver.toString}")
+//    println("checking Z3 program for satisfiability")
+//    println(s"SMT program:\n${solver.toString}")
     // Consider uncommenting the next line. See:
     // http://stackoverflow.com/questions/15806141/
     //   keep-getting-unknown-result-with-pattern-usage-in-smtlib-v2-input
@@ -382,7 +382,7 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
     */
   def extractModel(precision: Int): Map[String, String] = {
     val model = solver.getModel
-    println("solution extracted: " + model.toString)
+//    println("solution extracted: " + model.toString)
     // extract variable assignment in the solution found
     val solution = boolVarMap.mapValues(model.evaluate(_, false)) ++
       intVarMap.mapValues(model.evaluate(_, false)) ++
@@ -494,12 +494,12 @@ class Z3Interface(z3Module: Z3Module, isIntegerProgram: Boolean) {
         case SmtUnknown(reason) =>
           throw new Exception(s"SMT check() returned status UNKNOWN: $reason")
         case SmtUnsatisfiable =>
-          println("No satisfying assignment found")
+//          println("No satisfying assignment found")
           Seq.empty
         case SmtSatisfiable =>
           val model = extractModel(precision)
-          println(model)
-          println("SMT solution: " + model.mkString(", "))
+//          println(model)
+//          println("SMT solution: " + model.mkString(", "))
           Seq(model)
         case _ => throw new IllegalStateException("Unrecognized SMT status")
       }
