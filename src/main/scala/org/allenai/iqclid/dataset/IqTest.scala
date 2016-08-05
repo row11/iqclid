@@ -5,7 +5,7 @@ import org.allenai.iqclid.api._
 
 object IqTest extends Dataset {
 
-  override lazy val sequences = medium
+  override lazy val sequences = agiPaper
 
   val easy = Seq(
     DatasetSequence(
@@ -74,24 +74,30 @@ object IqTest extends Dataset {
         T(1), Apply(Plus(), Seq(Apply(Times(), Seq(
           Number(2), I())), Number(1)))))),
 
-    DatasetSequence(
-      NumberSequence(Seq(75, 15, 25, 5, 15), 1),
-      3,
-      Apply(Plus(),
-        Seq(
-      Apply(Div(), Seq(
-        Apply(Times(), Seq(
-          Apply(Mod(), Seq(
-            I(), Number(2))),
-          T(1))),
-        Number(5))),
-          Apply(Times(), Seq(
-            Apply(Mod(), Seq(
-              Apply(Plus(), Seq(
-                I(), Number(1))),
-              Number(2))),
-            T(1))),
-          Number(10)))),
+
+    // TODO(row11) fix it later
+//    DatasetSequence(
+//      NumberSequence(Seq(75, 15, 25, 5, 15), 1),
+//      3,
+//      Apply(Plus(),
+//        Seq(
+//          Apply(Div(), Seq(
+//            Apply(Times(),
+//              Seq(
+//                Apply(Mod(), Seq(I(), Number(2))),
+//                T(1)
+//              )
+//            ),
+//            Number(5))
+//          ),
+//      Apply(Times(),
+//        Seq(
+//        Apply(Mod(), Seq(
+//          Apply(Plus(), Seq(
+//            I(), Number(1))),
+//          Number(2))),
+//          Number(10))
+//      )))),
 
     DatasetSequence(
       NumberSequence(Seq(1, 2, 6, 24, 120), 1),
@@ -143,12 +149,12 @@ object IqTest extends Dataset {
 
 
     DatasetSequence(
-      NumberSequence(Seq(93, 74, 57, 42, 29), 1),
+      NumberSequence(Seq(93, 74, 57, 42, 29), 2),
       18,
       Apply(Plus(),
         Seq(
-          Apply(Minus(), Seq(T(1), Number(19))),
-          Apply(Times(), Seq(I(), Number(2)))
+          Apply(Minus(), Seq(Apply(Times(), Seq(Number(2), T(1))), T(2))),
+          Number(2)
         ))),
 
     DatasetSequence(
@@ -162,10 +168,10 @@ object IqTest extends Dataset {
     DatasetSequence(
       NumberSequence(Seq(2, -12, -32, -58, -90), 2),
       -128,
-      Apply(Minus(),
+      Apply(Plus(),
         Seq(
-          Apply(Minus(), Seq(T(1), Number(14))),
-          Apply(Times(), Seq(I(), Number(6)))
+          Apply(Minus(), Seq(Apply(Times(), Seq(Number(2), T(1))), T(2))),
+          Number(-6)
         ))),
 
     DatasetSequence(
@@ -297,7 +303,7 @@ object IqTest extends Dataset {
       NumberSequence(Seq( 2,12,21,29,36,42,47), 1),
       51,
       Apply (Plus(), Seq(
-          Apply(Plus(), Seq(T(1), Number(12))),
+          Apply(Plus(), Seq(T(1), Number(11))),
           Apply(Times(), Seq(I(), Number(-1)))
         )
       )
@@ -328,7 +334,7 @@ object IqTest extends Dataset {
       299,
       Apply (Plus(), Seq(
           Apply(Times(), Seq(T(1), Number(2))),
-          Apply(Pow(), Seq(Number(-1), I()))
+          Apply(Pow(), Seq(Number(-1), Apply(Minus(), Seq(I(), Number(1)))))
         )
       )
     )

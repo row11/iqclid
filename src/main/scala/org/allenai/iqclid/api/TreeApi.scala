@@ -75,9 +75,11 @@ object Evaluator {
           case (Pow(), Seq(el1, el2)) =>
             Math.pow(
               evaluateInternal(el1, seqSoFar, index), evaluateInternal(el2, seqSoFar, index)).toInt
-          case _ => throw new BadTreeException()
+          case _ =>
+            throw new BadTreeException()
         }
-      case _ => throw new BadTreeException()
+      case _ =>
+        throw new BadTreeException()
     }
   }
 }
