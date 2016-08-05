@@ -4,22 +4,35 @@ import java.util
 import java.util.concurrent.Callable
 
 import org.allenai.iqclid.api._
+import org.allenai.iqclid.dataset.IqTest
 
 object GPSolver {
   def main(args: Array[String]): Unit = {
-    println("Hello world from Scala!")
-    println(clj.Bridge.greet)
-    clj.Bridge.tutorial(15, 15)
-    val fitness = new BaselineFitness(0.5)
-    val solver = new GPSolver(fitness)
-    val sequence = NumberSequence(Seq(1, 2, 3, 4, 5), 1)
-    val results = solver.solve(sequence)
-    println(s"""$sequence\n=>$results""")
-    sys.exit(0)
+    try {
+      println("Hello world from Scala!")
+      println(clj.Bridge.greet)
+      //    clj.Bridge.tutorial(15, 15)
+      val fitness = new AccuracyFirstFitness(0.5)
+      //      val fitness = new SmallFirstFitness
+      val solver = new GPSolver(fitness)
+      //    val sequence = NumberSequence(Seq(1, 2, 3, 4, 5), 1)
+      IqTest.easy.foreach {
+        sequence =>
+          val results = solver.solve(sequence.numberSequence)
+          println(
+            s"""actual: ${Evaluator.evaluate(results(0).tree, sequence.numberSequence.baseCases, sequence.numberSequence.length)}
+               |actual: ${results.head}
+               |expected: ${sequence.numberSequence.seq}
+               |expected: ${sequence.answer}
+             """.stripMargin
+          )
+      }
+    } finally {
+      sys.exit(0)
+    }
   }
 
   def toScala(tree: Object): Tree = {
-    println(tree)
     toScalaRec(tree)
   }
 
@@ -39,6 +52,8 @@ object GPSolver {
             Div()
           case "mod" =>
             Mod()
+          case "pow" =>
+            Pow()
         }
         val args = elems.tail.map(toScalaRec)
         Apply(op, args)
@@ -48,11 +63,11 @@ object GPSolver {
         s.toString match {
           case "i" =>
             I()
-          case "p1" =>
+          case "t1" =>
             T(1)
-          case "p2" =>
+          case "t2" =>
             T(2)
-          case "p3" =>
+          case "t3" =>
             T(3)
         }
     }
@@ -67,7 +82,13 @@ class GPSolver(fitness: Fitness) extends Solver {
     val callable = new Callable[Double] {
       override def call(): Double = {
         val tree = GPSolver.toScala(box.get(0))
-        fitness.eval(tree, s)
+        val f = fitness.eval(tree, s)
+        if (f < 0.0) {
+          //          throw new Exception("Bad fitness.")
+          Double.MaxValue
+        } else {
+          f
+        }
       }
     }
     clj.Bridge.search(15, 15, box, callable)

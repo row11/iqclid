@@ -2,7 +2,7 @@ package org.allenai.iqclid.api
 
 object Tree {
   val listOfOps = Seq(
-    Plus(), Times(), Minus(), Div(), Mod()
+    Plus(), Times(), Minus(), Div(), Mod(), Pow()
   )
   def size(tree: Tree): Int = {
     tree match {
@@ -12,7 +12,32 @@ object Tree {
   }
 
 }
-sealed trait Tree
+sealed trait Tree {
+  override def toString = {
+    this match {
+      case Apply(op, args) =>
+        s"($op ${args.map(_.toString).mkString(" ")})"
+      case Number(n) =>
+        n.toString
+      case I() =>
+        "i"
+      case T(i) =>
+        s"t$i"
+      case Plus() =>
+        "+"
+      case Minus() =>
+        "-"
+      case Times() =>
+        "*"
+      case Div() =>
+        "/"
+      case Mod() =>
+        "mod"
+      case Pow() =>
+        "pow"
+    }
+  }
+}
 case class Apply(op: Op, args: Seq[Tree]) extends Tree
 trait Leaf extends Tree
 case class Number(value: Int) extends Leaf

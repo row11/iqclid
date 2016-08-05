@@ -41,3 +41,12 @@ class AccuracyFirstFitness(alpha: Double) extends BaselineFitness(alpha) {
   }
 
 }
+
+class SmallFirstFitness extends BaselineFitness(0.0) {
+  override def eval(tree: Tree, target: NumberSequence): Double = {
+    val acc = accuracy(tree, target)
+    val comp = complexity(tree)
+    (1 / comp) * acc / (acc + 10)
+  }
+
+}
