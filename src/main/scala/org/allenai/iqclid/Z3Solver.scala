@@ -6,7 +6,7 @@ import org.allenai.iqclid.z3._
 
 class Z3Solver extends Solver {
 
-  def getFunctionTree(depth: Int, nSeq: NumberSequence): Seq[Tree] = {
+  def getFunctionTree(depth: Int, nSeq: NumberSequence, numBaseCases: Int): Seq[Tree] = {
     var upper = 0
     var lower = 0
 
@@ -20,7 +20,7 @@ class Z3Solver extends Solver {
       val newBound = (upper + lower) / 2
       counter += 1
       try {
-        val tmp = getFunctionTree(depth, nSeq, upper)
+        val tmp = getFunctionTreeInner(depth, nSeq, upper, numBaseCases)
         upper = newBound
         result = tmp
       } catch {
@@ -33,7 +33,8 @@ class Z3Solver extends Solver {
     result
   }
 
-  def getFunctionTree(depth: Int, nSeq: NumberSequence, upper: Int): Seq[Tree] = {
+  def getFunctionTreeInner(depth: Int, nSeq: NumberSequence, upper: Int, numBaseCases: Int):
+  Seq[Tree] = {
 
     var treeIndex = 0
 
@@ -79,7 +80,7 @@ class Z3Solver extends Solver {
         val smt = new Z3Interface(z3Module, true)
 
 
-        smt.add(smt.mkLe(Seq(smt.mkAdd((nSeq.numBaseCases until nSeq.length).map {
+        smt.add(smt.mkLe(Seq(smt.mkAdd((numBaseCases until nSeq.length).map {
           i =>
             treeIndex = 0
             smt.mkAbs(smt.mkSub(functionCSP(depth, i), smt.mkIntConst(nSeq.seq(i))))
@@ -103,7 +104,7 @@ class Z3Solver extends Solver {
             smt.add(smt.mkImplies(isIndex, smt.mkEq(Seq(index, returnVal))))
             smt.add(smt.mkImplies(isT1, smt.mkEq(Seq(t1, returnVal))))
 
-            if (nSeq.numBaseCases < 2) {
+            if (numBaseCases < 2) {
               smt.add(smt.mkOr(Seq(isNumber, isIndex, isT1)))
             } else {
               val isT2 = smt.mkBoolVar(s"isT2_$treeIndex")
@@ -156,6 +157,7 @@ class Z3Solver extends Solver {
   /** Generate proposal trees */
   override def solve(s: NumberSequence): Seq[Solution] = {
     val f = new AccuracyFirstFitness(0.5)
-    getFunctionTree(1, s).map(x => Solution(x, f.eval(x, s)))
+    getFunctionTree(1, s, 1).map(x => Solution(x, f.eval(x, s))) ++
+    getFunctionTree(1, s, 2).map(x => Solution(x, f.eval(x, s)))
   }
 }

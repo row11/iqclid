@@ -1,6 +1,6 @@
 package org.allenai.iqclid.z3
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.{ Files, Paths }
 
 import org.apache.commons.compress.utils.IOUtils
 

@@ -1,7 +1,7 @@
 package org.allenai.iqclid
 
 import org.allenai.iqclid.RandUtil._
-import org.allenai.iqclid.api.{I, T, _}
+import org.allenai.iqclid.api.{ I, T, _ }
 
 trait Search extends Solver {
 
@@ -23,14 +23,13 @@ abstract class BeamSearch(maxSteps: Int, bestk: Int) extends Search {
         val accTrees = accSols.map(_.tree)
         val p = proposals(accTrees)
         val candidates = (accTrees ++ proposals(accTrees))
-            .distinct
-            .map(x => Solution(x, fitness.eval(x, target)))
-            .sortBy(_.fitness)
+          .distinct
+          .map(x => Solution(x, fitness.eval(x, target)))
+          .sortBy(_.fitness)
         candidates.take(bestk)
     }
   }
 }
-
 
 class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends BeamSearch(maxSteps, bestk) {
   def proposals(trees: Seq[Tree]): Seq[Tree] = {
@@ -41,7 +40,7 @@ class BaselineSearch(alpha: Double, maxSteps: Int, bestk: Int) extends BeamSearc
     } else {
       Seq()
     }
-    val createLeaves = (0 until 5).map(Number(_))  ++ Seq(T(1), T(2), I())
+    val createLeaves = (0 until 5).map(Number(_)) ++ Seq(T(1), T(2), I())
     val replaceSubtrees = trees.map(replaceRandomNode)
     mergeTrees ++ createLeaves ++ replaceSubtrees
 
