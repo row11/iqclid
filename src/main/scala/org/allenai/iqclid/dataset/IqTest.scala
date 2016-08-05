@@ -5,7 +5,7 @@ import org.allenai.iqclid.api._
 
 object IqTest extends Dataset {
 
-  val sequences = easy
+  override lazy val sequences = medium
 
   val easy = Seq(
     DatasetSequence(
@@ -62,7 +62,7 @@ object IqTest extends Dataset {
 
   val medium = Seq(
     DatasetSequence(
-      NumberSequence(Seq(-2, 5, -4, 3, 6), 2),
+      NumberSequence(Seq(-2, 5, -4, 3, -6), 2),
       1,
       Apply(Minus(), Seq(
         T(2), Number(2)))),
