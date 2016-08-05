@@ -2,17 +2,46 @@ package org.allenai.iqclid.api
 
 object Tree {
   val listOfOps = Seq(
-    Plus(), Times(), Minus(), Div(), Mod()
+    Plus(), Times(), Minus(), Div(), Mod(), Pow()
   )
   def size(tree: Tree): Int = {
     tree match {
-      case Apply(_, args) => 1 + args.map(size).sum
-      case l: Leaf => 1
+      case Apply(_, args) =>
+        1 + args.map(size).sum
+      case Number(n) =>
+        n
+      case l: Leaf =>
+        1
     }
   }
-
 }
-sealed trait Tree
+
+sealed trait Tree {
+  override def toString = {
+    this match {
+      case Apply(op, args) =>
+        s"($op ${args.map(_.toString).mkString(" ")})"
+      case Number(n) =>
+        n.toString
+      case I() =>
+        "i"
+      case T(i) =>
+        s"t$i"
+      case Plus() =>
+        "+"
+      case Minus() =>
+        "-"
+      case Times() =>
+        "*"
+      case Div() =>
+        "/"
+      case Mod() =>
+        "mod"
+      case Pow() =>
+        "pow"
+    }
+  }
+}
 case class Apply(op: Op, args: Seq[Tree]) extends Tree
 trait Leaf extends Tree
 case class Number(value: Int) extends Leaf
@@ -31,23 +60,25 @@ case class Div() extends Op
 case class Mod() extends Op
 case class Pow() extends Op
 
-class BadTreeException extends RuntimeException
+class BadTreeException(msg: String) extends RuntimeException(msg)
 
 object Evaluator {
   def evaluate(tree: Tree, baseCases: Seq[Int], numTerms: Int): Seq[Int] = {
-    (baseCases.size until numTerms).foldLeft(baseCases) {
-      case (seqSoFar, nextIndex) =>
-        seqSoFar :+ evaluateInternal(tree, seqSoFar, nextIndex)
+    var results = baseCases.map(_.toDouble).toIndexedSeq
+    (results.size until numTerms).foreach {
+      i =>
+        results = results :+ evaluateInternal(tree, results, i)
     }
+    results.map(_.toInt)
   }
 
-  private def evaluateInternal(tree: Tree, seqSoFar: Seq[Int], index: Int): Int = {
+  private def evaluateInternal(tree: Tree, seqSoFar: IndexedSeq[Double], index: Int): Double = {
     tree match {
       case Number(v) => v
       case I() => index
       case T(i) =>
         if (index - i < 0) {
-          throw new BadTreeException()
+          throw new Exception(s"Bad index $tree")
         }
         seqSoFar(index - i)
       case Apply(op, args) =>
@@ -61,23 +92,26 @@ object Evaluator {
           case (Div(), Seq(el1, el2)) =>
             val denom = evaluateInternal(el2, seqSoFar, index)
             if (denom == 0) {
-              throw new BadTreeException()
+              throw new BadTreeException(s"Bad denom $tree")
             } else {
               evaluateInternal(el1, seqSoFar, index) / evaluateInternal(el2, seqSoFar, index)
             }
           case (Mod(), Seq(el1, el2)) =>
             val denom = evaluateInternal(el2, seqSoFar, index)
             if (denom == 0) {
-              throw new BadTreeException()
+              throw new BadTreeException(s"Bad denom $tree")
             } else {
               evaluateInternal(el1, seqSoFar, index) % evaluateInternal(el2, seqSoFar, index)
             }
           case (Pow(), Seq(el1, el2)) =>
             Math.pow(
-              evaluateInternal(el1, seqSoFar, index), evaluateInternal(el2, seqSoFar, index)).toInt
-          case _ => throw new BadTreeException()
+              evaluateInternal(el1, seqSoFar, index), evaluateInternal(el2, seqSoFar, index)
+            )
+          case _ =>
+            throw new Exception(s"Bad apply $tree")
         }
-      case _ => throw new BadTreeException()
+      case _ =>
+        throw new Exception(s"Bad tree $tree")
     }
   }
 }

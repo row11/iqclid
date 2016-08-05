@@ -1,7 +1,7 @@
 import org.allenai.common.testkit.UnitSpec
 import org.allenai.iqclid.api._
 import org.allenai.iqclid.dataset.IqTest
-import org.allenai.iqclid.{BaselineSearch, NumberSequence, RandUtil}
+import org.allenai.iqclid.{ BaselineSearch, NumberSequence, RandUtil }
 
 class RandUtilSpec extends UnitSpec {
 
@@ -24,6 +24,5 @@ class RandUtilSpec extends UnitSpec {
     println(result)
 
   }
-
 
 }

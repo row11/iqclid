@@ -2,7 +2,11 @@ package org.allenai.iqclid.api
 
 import org.allenai.iqclid.NumberSequence
 
-case class Solution(tree: Tree, fitness: Double)
+case class Solution(tree: Tree, fitness: Double) {
+  override def toString = {
+    s"$tree @ $fitness"
+  }
+}
 
 trait Solver {
   /** Generate proposal trees */

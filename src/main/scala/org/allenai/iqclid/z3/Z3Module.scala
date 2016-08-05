@@ -16,7 +16,6 @@ object ThreadSafeDependencies {
     }
   }
 
-
   /** An object for one time set up of native library paths for Z3
     * Use it via ThreadSafeDependencies.withZ3
     */
